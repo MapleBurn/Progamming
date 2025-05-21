@@ -1,0 +1,26 @@
+@page "/Planner"
+@rendermode InteractiveServer
+<PageTitle>Work Planner</PageTitle>
+
+<p role="status">Current planned events: @eventCount</p>
+ 
+<button class="btn btn-primary" @onclick="AddEvent">Add Event</button>
+ 
+<ul class="list-group mt-3">
+    @foreach (var ev in events)
+    {
+        <li class="list-group-item">Event @ev</li>
+    }
+</ul>
+ 
+@code {
+    private int eventCount = 0;
+    private List<int> events = new();
+ 
+    private void AddEvent()
+    {
+        eventCount++;
+        events.Add(eventCount);
+    }
+}
+
