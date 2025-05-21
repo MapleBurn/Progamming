@@ -1,0 +1,64 @@
+.planner-cell {
+      position: relative;
+      border: 1px solid #ececec;
+      height: 40px;
+      background: #f8f9fa;
+      cursor: pointer;
+}
+.event-block {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      top: 2px;
+      bottom: 2px;
+      background: #e1f5fe;
+      border-radius: 4px;
+      padding: 4px 8px;
+      border: 1px solid #90caf9;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.1s;
+      z-index: 1;
+}
+.selecting {
+      background: #d4edda !important;
+}
+.event-block:hover {
+      transform: scale(1.02);
+      z-index: 2;
+}
+
+    .planner-container {
+      width: 70vw;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .planner-header {
+      background: #0074d9;
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+    }
+    .planner-cell {
+      border: 1px solid #ececec;
+      min-height: 40px;
+      padding: 4px;
+      position: relative;
+      background: #f8f9fa;
+    }
+    .task-list {
+      list-style: none;
+      padding-left: 0;
+      margin-bottom: 0;
+    }
+    .task-item {
+      background: #e1f5fe;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      padding: 2px 6px;
+      font-size: 0.95em;
+      word-break: break-word;
+    }
