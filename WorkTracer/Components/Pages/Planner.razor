@@ -83,6 +83,7 @@
     private bool isSelecting = false;
     private int? startCol;
     private int? startHour;
+    private List<(int col, int hour)> currentSelection = new List<(int col, int hour)>();
     private int? endHour;
     
     // Modified event class
@@ -171,12 +172,6 @@
         }
         CloseModal();
     }
-    private Dictionary<string, PlannerEvent> events = new Dictionary<string, PlannerEvent>();
-    private PlannerEvent currentEvent;
-    private bool isSelecting = false;
-    private int? startCol;
-    private int? startHour;
-    private List<(int col, int hour)> currentSelection = new List<(int col, int hour)>();
     
     // Modal properties
     private string ModalDisplay = "none";
@@ -184,55 +179,6 @@
     private bool ShowBackdrop = false;
     private string EditEventName { get; set; } = "";
 
-    private void HandleMouseDown(int col, int hour)
-    {
-        // Check if clicked on an event
-        var eventsInCell = GetEventsInCell(col, hour);
-        if (eventsInCell.Any())
-        {
-            // Event click will be handled by the event's onclick handler
-            return;
-        }
-
-        isSelecting = true;
-        startCol = col;
-        startHour = hour;
-        ClearSelection();
-        currentSelection.Add((col, hour));
-        StateHasChanged();
-    }
-
-    private void HandleMouseMove(int col, int hour)
-    {
-        if (!isSelecting) return;
-
-        // If we're on the same cell, do nothing
-        if (currentSelection.Count == 1 && 
-            currentSelection[0].col == col && 
-            currentSelection[0].hour == hour)
-            return;
-
-        ClearSelection();
-        CalculateSelection(col, hour);
-        StateHasChanged();
-    }
-
-    private void HandleMouseUp()
-    {
-        if (!isSelecting) return;
-        
-        isSelecting = false;
-        
-        if (currentSelection.Count > 0)
-        {
-            // In a real app, you might want to use a proper dialog
-            // But for simplicity, we'll use prompt
-            string eventName = "New Event";
-            CreateEvent(eventName);
-        }
-        
-        StateHasChanged();
-    }
 
     private void ClearSelection()
     {
@@ -302,15 +248,6 @@
         ModalClass = "";
         ShowBackdrop = false;
         currentEvent = null;
-    }
-
-    private void SaveEvent()
-    {
-        if (currentEvent != null)
-        {
-            currentEvent.Name = EditEventName;
-        }
-        CloseModal();
     }
 
     private void DeleteEvent()
