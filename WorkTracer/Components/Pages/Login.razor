@@ -23,7 +23,7 @@
 
     private async Task HandleLogin()
     {
-        var result = await authService.Login(credentials);
+        var result = await authService.Login(credentials.Username, credentials.Password);
         if (result)
         {
             navigation.NavigateTo("/");
@@ -34,7 +34,7 @@
         }
     }
 
-        private class Credentials
+    private class Credentials
     {
         public string Username { get; set; }
         public string Password { get; set; }

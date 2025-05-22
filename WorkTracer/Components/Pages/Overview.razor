@@ -18,7 +18,7 @@
 @code {
     protected override void OnInitialized()
     {
-        if (!authService.IsLoggedIn)
+        if (!authService.isLoggedIn)
         {
             navigation.NavigateTo("/login");
         }
