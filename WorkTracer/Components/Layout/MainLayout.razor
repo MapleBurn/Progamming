@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject AuthService authService
 
 <div class="page">
     <div class="sidebar">
@@ -7,7 +8,14 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            @if (authService.isLoggedIn)
+            {
+                <a href="" target="_blank">logged in as: Admin(fix)</a>
+            }
+            else
+            {
+                <a href="login" target="_blank">log in</a>
+            }
         </div>
 
         <article class="content px-4">
