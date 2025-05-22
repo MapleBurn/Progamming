@@ -15,6 +15,13 @@
     padding: 10px 0;
 }
 
+.planner-cell {
+    position: relative;
+    border: 1px solid #ececec;
+    height: 40px;
+    background: #f8f9fa;
+    cursor: pointer;
+}
 
 .hour-label {
     position: absolute;
@@ -24,29 +31,21 @@
     opacity: 0.5;
 }
 
-.planner-cell {
-    position: relative;
-    height: 40px;
-    border: 1px solid #ececec;
-}
 .event-block {
     position: absolute;
     left: 2px;
     right: 2px;
+    top: 2px;
+    bottom: 2px;
     background: #e1f5fe;
-    border: 1px solid #90caf9;
     border-radius: 4px;
     padding: 4px 8px;
+    border: 1px solid #90caf9;
+    cursor: pointer;
     overflow: hidden;
-    z-index: 1;
     transition: transform 0.1s;
+    z-index: 1;
 }
-/* Dynamic height based on duration */
-.event-block[style*="--duration"] {
-    height: calc(var(--duration) * 40px - 4px);
-    top: 2px;
-}
-
 
 .event-block:hover {
     transform: scale(1.02);
@@ -56,3 +55,4 @@
 .selecting {
     background: #d4edda !important;
 }
+
