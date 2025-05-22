@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<AuthService>();
+builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
 
