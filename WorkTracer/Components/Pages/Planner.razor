@@ -1,6 +1,9 @@
 @page "/planner"
 @rendermode InteractiveServer
 
+@inject AuthService authService
+@inject NavigationManager navigation
+
 <div class="planner-container">
     <!-- Header Row -->
     <div class="row planner-header">
@@ -78,6 +81,14 @@
 }
 
 @code {
+    protected override void OnInitialized()
+    {
+        if (!authService.IsLoggedIn)
+        {
+            navigation.NavigateTo("/login");
+        }
+    }
+
     private Dictionary<string, PlannerEvent> events = new Dictionary<string, PlannerEvent>();
     private PlannerEvent currentEvent;
     private bool isSelecting = false;

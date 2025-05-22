@@ -1,0 +1,42 @@
+@page "/login"
+@inject AuthService authService
+@inject NavigationManager navigation
+
+<PageTitle>Login</PageTitle>
+
+<EditForm Model="@credentials" OnValidSubmit="HandleLogin">
+    <InputText @bind-Value="credentials.Username" placeholder="Username" />
+    <InputText @bind-Value="credentials.Password" placeholder="Password" type="password" />
+    <button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+@if (loginFailed)
+{
+    <div class="alert alert-danger" role="alert">
+        <p><strong>Error</strong> incorrect username or password</p>
+    </div>
+}
+
+@code {
+    private Credentials credentials = new Credentials();
+    private bool loginFailed = false;
+
+    private async Task HandleLogin()
+    {
+        var result = await authService.Login(credentials);
+        if (result)
+        {
+            navigation.NavigateTo("/");
+        }
+        else
+        {
+            loginFailed = true;
+        }
+    }
+}
+
+private class Credentials
+{
+    public string Username { get; set; }
+    public string Password { get; set; }
+}
