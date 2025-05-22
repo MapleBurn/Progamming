@@ -83,150 +83,92 @@
     private bool isSelecting = false;
     private int? startCol;
     private int? startHour;
-    private List<(int col, int hour)> currentSelection = new List<(int col, int hour)>();
+    private int? endHour;
     
-    // Modal properties
-    private string ModalDisplay = "none";
-    private string ModalClass = "";
-    private bool ShowBackdrop = false;
-    private string EditEventName { get; set; } = "";
-
+    // Modified event class
+    public class PlannerEvent
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public int Column { get; set; }
+        public int StartHour { get; set; }
+        public int Duration { get; set; }
+    }
     private void HandleMouseDown(int col, int hour)
     {
-        // Check if clicked on an event
-        var eventsInCell = GetEventsInCell(col, hour);
-        if (eventsInCell.Any())
-        {
-            // Event click will be handled by the event's onclick handler
-            return;
-        }
-
-        isSelecting = true;
+        if (col == 0) return;
+        
         startCol = col;
         startHour = hour;
-        ClearSelection();
-        currentSelection.Add((col, hour));
-        StateHasChanged();
+        endHour = hour;
+        isSelecting = true;
     }
-
     private void HandleMouseMove(int col, int hour)
     {
-        if (!isSelecting) return;
-
-        // If we're on the same cell, do nothing
-        if (currentSelection.Count == 1 && 
-            currentSelection[0].col == col && 
-            currentSelection[0].hour == hour)
-            return;
-
-        ClearSelection();
-        CalculateSelection(col, hour);
-        StateHasChanged();
+        if (!isSelecting || col != startCol) return;
+        endHour = hour;
     }
-
     private void HandleMouseUp()
     {
         if (!isSelecting) return;
         
         isSelecting = false;
-        
-        if (currentSelection.Count > 0)
-        {
-            // In a real app, you might want to use a proper dialog
-            // But for simplicity, we'll use prompt
-            string eventName = "New Event";
-            CreateEvent(eventName);
-        }
-        
-        StateHasChanged();
-    }
-
-    private void ClearSelection()
-    {
-        currentSelection.Clear();
-    }
-
-    private void CalculateSelection(int endCol, int endHour)
-    {
-        if (!startCol.HasValue || !startHour.HasValue) return;
-
-        int minCol = Math.Min(startCol.Value, endCol);
-        int maxCol = Math.Max(startCol.Value, endCol);
-        int minHour = Math.Min(startHour.Value, endHour);
-        int maxHour = Math.Max(startHour.Value, endHour);
-
-        for (int col = minCol; col <= maxCol; col++)
-        {
-            for (int hour = minHour; hour <= maxHour; hour++)
-            {
-                currentSelection.Add((col, hour));
-            }
-        }
-    }
-
-    private bool IsSelected(int col, int hour)
-    {
-        return currentSelection.Any(c => c.col == col && c.hour == hour);
-    }
-
-    private void CreateEvent(string name)
-    {
-        var eventId = Guid.NewGuid().ToString();
-        var cells = currentSelection.ToList();
-        
+        var duration = Math.Abs(endHour!.Value - startHour!.Value) + 1;
         var newEvent = new PlannerEvent
         {
-            Id = eventId,
-            Name = name,
-            Cells = cells
+            Id = Guid.NewGuid().ToString(),
+            Column = startCol!.Value,
+            StartHour = Math.Min(startHour.Value, endHour.Value),
+            Duration = duration
         };
-        
-        events[eventId] = newEvent;
-        currentSelection.Clear();
-    }
-
-    private List<PlannerEvent> GetEventsInCell(int col, int hour)
-    {
-        return events.Values
-            .Where(e => e.Cells.Any(c => c.col == col && c.hour == hour))
+        // Split overlapping events
+        var overlapping = events.Values
+            .Where(e => e.Column == newEvent.Column && 
+                      !(e.StartHour >= newEvent.StartHour + newEvent.Duration || 
+                        e.StartHour + e.Duration <= newEvent.StartHour))
             .ToList();
-    }
-
-    private void ShowEditModal(string eventId)
-    {
-        if (events.TryGetValue(eventId, out currentEvent))
+        foreach (var existing in overlapping)
         {
-            EditEventName = currentEvent.Name;
-            ModalDisplay = "block";
-            ModalClass = "show";
-            ShowBackdrop = true;
+            events.Remove(existing.Id);
+            
+            // Split into non-overlapping parts
+            if (existing.StartHour < newEvent.StartHour)
+            {
+                events.Add(Guid.NewGuid().ToString(), new PlannerEvent {
+                    Column = existing.Column,
+                    StartHour = existing.StartHour,
+                    Duration = newEvent.StartHour - existing.StartHour,
+                    Name = existing.Name
+                });
+            }
+            
+            if (existing.StartHour + existing.Duration > newEvent.StartHour + newEvent.Duration)
+            {
+                events.Add(Guid.NewGuid().ToString(), new PlannerEvent {
+                    Column = existing.Column,
+                    StartHour = newEvent.StartHour + newEvent.Duration,
+                    Duration = existing.StartHour + existing.Duration - (newEvent.StartHour + newEvent.Duration),
+                    Name = existing.Name
+                });
+            }
         }
+        ShowCreateModal(newEvent);
     }
-
-    private void CloseModal()
+    private void ShowCreateModal(PlannerEvent newEvent)
     {
-        ModalDisplay = "none";
-        ModalClass = "";
-        ShowBackdrop = false;
-        currentEvent = null;
+        currentEvent = newEvent;
+        EditEventName = "";
+        ModalDisplay = "block";
+        ModalClass = "show";
+        ShowBackdrop = true;
     }
-
     private void SaveEvent()
     {
         if (currentEvent != null)
         {
             currentEvent.Name = EditEventName;
-        }
-        CloseModal();
-    }
-
-    private void DeleteEvent()
-    {
-        if (currentEvent != null)
-        {
-            events.Remove(currentEvent.Id);
+            events[currentEvent.Id] = currentEvent;
         }
         CloseModal();
     }
 }
-
