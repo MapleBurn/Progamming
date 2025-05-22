@@ -1,13 +1,16 @@
 ﻿@page "/counter"
 @rendermode InteractiveServer
 
-<PageTitle>Counter</PageTitle>
+<PageTitle>overview</PageTitle>
 
-<h1>Counter</h1>
+<h1>Work overview</h1>
 
-<p role="status">Current count: @currentCount</p>
+<p>
+    here will be two graphs, one for the info about worked hours in the chosen month,
+     and the other one for the whole year.
+</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<button class="btn btn-primary" @onclick="IncrementCount">Grill about random person alive</button>
 
 @code {
     private int currentCount = 0;
