@@ -12,10 +12,9 @@ public class AuthService
         {
             return Task.FromResult(false);
         }
-
-        public void Logout()
-        {
-            isLoggedIn = false;
-        }
+    }
+    public void Logout()
+    {
+        isLoggedIn = false;
     }
 }
