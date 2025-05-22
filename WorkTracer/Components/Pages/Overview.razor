@@ -1,5 +1,8 @@
-﻿@page "/counter"
+﻿@page "/overview"
 @rendermode InteractiveServer
+
+@inject AuthService authService
+@inject NavigationManager navigation
 
 <PageTitle>overview</PageTitle>
 
@@ -10,9 +13,17 @@
      and the other one for the whole year.
 </p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Grill about random person alive</button>
+<button class="btn btn-primary" @onclick="IncrementCount">Grill a random person alive</button>
 
 @code {
+    protected override void OnInitialized()
+    {
+        if (!authService.IsLoggedIn)
+        {
+            navigation.NavigateTo("/login");
+        }
+    }
+
     private int currentCount = 0;
 
     private void IncrementCount()
