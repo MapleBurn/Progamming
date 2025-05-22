@@ -87,14 +87,6 @@
     private int? endHour;
     
     // Modified event class
-    public class PlannerEvent
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public int Column { get; set; }
-        public int StartHour { get; set; }
-        public int Duration { get; set; }
-    }
     private void HandleMouseDown(int col, int hour)
     {
         if (col == 0) return;
