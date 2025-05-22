@@ -45,6 +45,13 @@ jobs:
         with:
           name: .net-app
 
+      # Clean up possible conflicting file/directory before deploying
+      - name: Clean up WorkTracer conflicts before Azure deploy
+        run: |
+          if [ -e "WorkTracer" ]; then
+            rm -rf WorkTracer
+          fi
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -53,4 +60,4 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1D275D3E1C034D7C9270903C09526419 }}
-          clean: true   
+          clean: true
