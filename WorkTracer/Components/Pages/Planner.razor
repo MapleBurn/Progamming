@@ -23,8 +23,8 @@
         {
             int currentCol = col;
             <div class="col p-0">
-                <div id="@($"col-{currentCol}")">
-                    @for (int hour = 1; hour <= 24; hour++)
+                <div id="@($"col-{currentCol}")" style="position: relative; height: 960px;">
+                    @for (int hour = 0; hour < 24; hour++)
                     {
                         int currentHour = hour;
                         <div class="planner-cell @(IsSelected(currentCol, currentHour) ? "selecting" : "")" 
@@ -38,17 +38,27 @@
                             {
                                 <div class="hour-label">@(currentHour):00</div>
                             }
-                            
-                            @foreach (var evt in GetEventsInCell(currentCol, currentHour))
-                            {
-                                <div class="event-block" 
-                                     data-event-id="@evt.Id" 
-                                     @onclick:stopPropagation="true"
-                                     @onclick="() => ShowEditModal(evt.Id)">
-                                     @evt.Name
-                                </div>
-                            }
                         </div>
+                    }
+                    
+                    @foreach (var evt in GetEventsInColumn(currentCol))
+                    {
+                        var columnCells = evt.Cells.Where(c => c.col == currentCol).ToList();
+                        @if (columnCells.Any())
+                        {
+                            var minHour = columnCells.Min(c => c.hour);
+                            var maxHour = columnCells.Max(c => c.hour);
+                            <div class="event-block"
+                                 style="top: @((minHour) * 40)px; height: @((maxHour - minHour + 1) * 40)px"
+                                 data-event-id="@evt.Id"
+                                 @onclick:stopPropagation="true"
+                                 @onclick="() => ShowEditModal(evt.Id)">
+                                <p1>@evt.Name</p1><br><br>
+                                <p1 style="overflow-wrap: break-word; word-break: break-all; white-space: pre-wrap;">
+                                    @evt.Text
+                                </p1>
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -66,7 +76,7 @@
             </div>
             <div class="modal-body">
                 <input type="text" id="editEventName" class="form-control mb-3" placeholder="Event name" @bind="EditEventName">
-                <input type="text" id="EditEventText" class="form-control mb-3" placeholder="Text" @bind="EditEventText">
+                <InputTextArea id="EditEventText" class="form-control mb-3" placeholder="Text" @bind-Value="EditEventText" rows="6"/>
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-danger" id="deleteEvent" @onclick="DeleteEvent">Delete</button>
                     <button type="button" class="btn btn-primary" id="saveEvent" @onclick="SaveEvent">Save Changes</button>
@@ -95,7 +105,7 @@
     
     private Dictionary<string, PlannerEvent> events = new Dictionary<string, PlannerEvent>();
     private PlannerEvent currentEvent;
-    private bool isSelecting = false;
+    private bool isSelecting;
     private int? startCol;
     private int? startHour;
     private List<(int col, int hour)> currentSelection = new List<(int col, int hour)>();
@@ -103,39 +113,26 @@
     // Modal properties
     private string ModalDisplay = "none";
     private string ModalClass = "";
-    private bool ShowBackdrop = false;
+    private bool ShowBackdrop;
     private string EditEventName { get; set; } = "";
     private string EditEventText { get; set; } = "";
 
     private void HandleMouseDown(int col, int hour)
     {
-        // Check if clicked on an event
-        var eventsInCell = GetEventsInCell(col, hour);
-        if (eventsInCell.Any())
-        {
-            // Event click will be handled by the event's onclick handler
-            return;
-        }
+        if (col == 0) return;
+        //if (GetEventsInCell(col, hour).Any()) return;
 
         isSelecting = true;
         startCol = col;
         startHour = hour;
-        ClearSelection();
+        currentSelection.Clear();
         currentSelection.Add((col, hour));
-        StateHasChanged();
     }
 
     private void HandleMouseMove(int col, int hour)
     {
-        if (!isSelecting) return;
-
-        // If we're on the same cell, do nothing
-        if (currentSelection.Count == 1 && 
-            currentSelection[0].col == col && 
-            currentSelection[0].hour == hour)
-            return;
-
-        ClearSelection();
+        if (!isSelecting || col == 0) return;
+        
         CalculateSelection(col, hour);
         StateHasChanged();
     }
@@ -148,23 +145,17 @@
         
         if (currentSelection.Count > 0)
         {
-            // In a real app, you might want to use a proper dialog
-            // But for simplicity, we'll use prompt
-            string eventName = "New Event";
-            CreateEvent(eventName);
+            if (currentSelection.Any(c => c.col == 0)) return;
+            CreateEvent("New Event");
         }
-        
         StateHasChanged();
-    }
-
-    private void ClearSelection()
-    {
-        currentSelection.Clear();
     }
 
     private void CalculateSelection(int endCol, int endHour)
     {
         if (!startCol.HasValue || !startHour.HasValue) return;
+
+        currentSelection.Clear();
 
         int minCol = Math.Min(startCol.Value, endCol);
         int maxCol = Math.Max(startCol.Value, endCol);
@@ -187,18 +178,75 @@
 
     private void CreateEvent(string name)
     {
-        var eventId = Guid.NewGuid().ToString();
-        var cells = currentSelection.ToList();
-        
-        var newEvent = new PlannerEvent
+        var eventsToAdd = new List<PlannerEvent>();
+        var eventsToRemove = new List<string>();
+
+        // Process existing events for splitting
+        foreach (var existingEvent in events.Values.ToList())
         {
-            Id = eventId,
+            var overlap = existingEvent.Cells.Intersect(currentSelection).ToList();
+            if (overlap.Count == 0) continue;
+
+            var remainingCells = existingEvent.Cells.Except(currentSelection).ToList();
+            var columns = remainingCells.GroupBy(c => c.col);
+
+            foreach (var colGroup in columns)
+            {
+                var hours = colGroup.Select(c => c.hour)
+                                  .OrderBy(h => h)
+                                  .ToList();
+                
+                var blocks = GroupIntoContiguousBlocks(hours);
+                
+                foreach (var block in blocks)
+                {
+                    eventsToAdd.Add(new PlannerEvent {
+                        Id = Guid.NewGuid().ToString(),
+                        Name = existingEvent.Name,
+                        Text = existingEvent.Text,
+                        Cells = block.Select(h => (colGroup.Key, h)).ToList()
+                    });
+                }
+            }
+            
+            eventsToRemove.Add(existingEvent.Id);
+        }
+
+        // Update event dictionary
+        foreach (var id in eventsToRemove) events.Remove(id);
+        foreach (var evt in eventsToAdd) events[evt.Id] = evt;
+
+        // Add new event
+        var newId = Guid.NewGuid().ToString();
+        events[newId] = new PlannerEvent {
+            Id = newId,
             Name = name,
-            Cells = cells
+            Cells = currentSelection.ToList()
         };
         
-        events[eventId] = newEvent;
         currentSelection.Clear();
+    }
+
+    private List<List<int>> GroupIntoContiguousBlocks(List<int> hours)
+    {
+        if (!hours.Any()) return new List<List<int>>();
+        
+        var blocks = new List<List<int>>();
+        var currentBlock = new List<int> { hours[0] };
+
+        for (int i = 1; i < hours.Count; i++)
+        {
+            if (hours[i] == currentBlock.Last() + 1)
+                currentBlock.Add(hours[i]);
+            else
+            {
+                blocks.Add(currentBlock);
+                currentBlock = new List<int> { hours[i] };
+            }
+        }
+        blocks.Add(currentBlock);
+        
+        return blocks;
     }
 
     private List<PlannerEvent> GetEventsInCell(int col, int hour)
@@ -208,12 +256,19 @@
             .ToList();
     }
 
+    private List<PlannerEvent> GetEventsInColumn(int column)
+    {
+        return events.Values
+            .Where(e => e.Cells.Any(c => c.col == column))
+            .ToList();
+    }
+
     private void ShowEditModal(string eventId)
     {
         if (events.TryGetValue(eventId, out currentEvent))
         {
             EditEventName = currentEvent.Name;
-            EditEventText = currentEvent.Text;
+            EditEventText = currentEvent.Text ?? "";
             ModalDisplay = "block";
             ModalClass = "show";
             ShowBackdrop = true;

@@ -45,6 +45,7 @@
     overflow: hidden;
     transition: transform 0.1s;
     z-index: 1;
+    pointer-events: auto;
 }
 
 .event-block:hover {
@@ -55,4 +56,12 @@
 .selecting {
     background: #d4edda !important;
 }
+
+.planner-container, .planner-header, .col.p-0, .planner-cell, .hour-label, .event-block{
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
 
