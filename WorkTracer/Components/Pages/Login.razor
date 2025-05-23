@@ -4,16 +4,30 @@
 
 <PageTitle>Login</PageTitle>
 
-<EditForm Model="@credentials" OnValidSubmit="HandleLogin">
-    <InputText @bind-Value="credentials.Username" placeholder="Username" />
-    <InputText @bind-Value="credentials.Password" placeholder="Password" type="password" />
-    <button type="submit" class="btn btn-primary">Login</button>
+<EditForm Model="@credentials" OnValidSubmit=@HandleLogin FormName="loginForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <InputText @bind-Value="credentials.Username"  
+                   class="form-control"
+                   placeholder="Username" />
+    </div>
+    <div class="mb-3">
+        <InputText @bind-Value="credentials.Password" 
+                   type="password"
+                   class="form-control"
+                   placeholder="Password" />
+    </div>
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">Login</button>
+    </div>
 </EditForm>
 
 @if (loginFailed)
 {
     <div class="alert alert-danger" role="alert">
-        <p><strong>Error</strong> incorrect username or password</p>
+        <p><strong>Error:</strong> incorrect username or password.</p>
     </div>
 }
 
@@ -21,9 +35,9 @@
     private Credentials credentials = new Credentials();
     private bool loginFailed = false;
 
-    private async Task HandleLogin()
+    private void HandleLogin()
     {
-        var result = await authService.Login(credentials.Username, credentials.Password);
+        bool result = authService.Login(credentials.Username, credentials.Password);
         if (result)
         {
             navigation.NavigateTo("/");
@@ -32,11 +46,5 @@
         {
             loginFailed = true;
         }
-    }
-
-    private class Credentials
-    {
-        public string Username { get; set; }
-        public string Password { get; set; }
     }
 }

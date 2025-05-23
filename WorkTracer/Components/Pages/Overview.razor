@@ -16,10 +16,13 @@
 <button class="btn btn-primary" @onclick="IncrementCount">Grill a random person alive</button>
 
 @code {
-    protected override void OnInitialized()
+    private bool redirected = false;
+
+    protected override void OnAfterRender(bool firstRender)
     {
-        if (!authService.isLoggedIn)
+        if (firstRender && !authService.isLoggedIn && !redirected)
         {
+            redirected = true; // Prevent redirect loop
             navigation.NavigateTo("/login");
         }
     }

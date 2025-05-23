@@ -1,6 +1,9 @@
 @page "/planner"
 @rendermode InteractiveServer
 
+@inject AuthService authService
+@inject NavigationManager navigation
+
 <div class="planner-container">
     <!-- Header Row -->
     <div class="row planner-header">
@@ -79,6 +82,17 @@
 }
 
 @code {
+    private bool redirected = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && !authService.isLoggedIn && !redirected)
+        {
+            redirected = true; // Prevent redirect loop
+            navigation.NavigateTo("/login");
+        }
+    }
+    
     private Dictionary<string, PlannerEvent> events = new Dictionary<string, PlannerEvent>();
     private PlannerEvent currentEvent;
     private bool isSelecting = false;

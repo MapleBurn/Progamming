@@ -1,16 +1,16 @@
 public class AuthService
 {
     public bool isLoggedIn = false;
-    public Task<bool> Login(string username, string password)
+    public bool Login(string username, string password)
     {
         if (username == "admin" && password == "admin")
         {
             isLoggedIn = true;
-            return Task.FromResult(true);
+            return true;
         }
         else
         {
-            return Task.FromResult(false);
+            return false;
         }
     }
     public void Logout()
