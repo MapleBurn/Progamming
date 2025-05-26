@@ -3,10 +3,21 @@ using WorkTracer.Components;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddSingleton<UserRecord>();
+
+// Add authentication options
+builder.Services.AddAuthentication("Auth")
+    .AddCookie("Auth", options =>
+    {            
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+        options.SlidingExpiration = true;
+        options.LoginPath = "/login";
+    });
+builder.Services.AddCascadingAuthenticationState();
 
 var app = builder.Build();
 
@@ -18,12 +29,19 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllerRoute("default", "{controller}/{action}");
+});
 
 app.Run();

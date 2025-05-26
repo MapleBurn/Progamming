@@ -1,4 +1,6 @@
 ﻿@page "/overview"
+@attribute [Authorize]
+
 @rendermode InteractiveServer
 
 @inject AuthService authService
@@ -16,17 +18,6 @@
 <button class="btn btn-primary" @onclick="IncrementCount">Grill a random person alive</button>
 
 @code {
-    private bool redirected = false;
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender && !authService.isLoggedIn && !redirected)
-        {
-            redirected = true; // Prevent redirect loop
-            navigation.NavigateTo("/login");
-        }
-    }
-
     private int currentCount = 0;
 
     private void IncrementCount()

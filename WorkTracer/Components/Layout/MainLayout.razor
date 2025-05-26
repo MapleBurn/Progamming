@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthService authService
+@inject NavigationManager navigation
 
 <div class="page">
     <div class="sidebar">
@@ -10,7 +11,8 @@
         <div class="top-row px-4">
             @if (authService.isLoggedIn)
             {
-                <a href="" target="_blank">logged in as: Admin(fix)</a>
+                <a href="" target="_blank">logged in as: erororororororor</a>
+                <button class="btn btn-danger" action="Auth/CookieLogout">Log out</button>
             }
             else
             {
@@ -29,3 +31,8 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code
+{
+    
+}

@@ -1,4 +1,6 @@
 @page "/planner"
+@attribute [Authorize]
+
 @rendermode InteractiveServer
 
 @inject AuthService authService
@@ -92,17 +94,6 @@
 }
 
 @code {
-    private bool redirected = false;
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender && !authService.isLoggedIn && !redirected)
-        {
-            redirected = true; // Prevent redirect loop
-            navigation.NavigateTo("/login");
-        }
-    }
-    
     private Dictionary<string, PlannerEvent> events = new Dictionary<string, PlannerEvent>();
     private PlannerEvent currentEvent;
     private bool isSelecting;

@@ -1,11 +1,38 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+
 @using Microsoft.AspNetCore.Components
+@inject AuthService authService
+@inject NavigationManager navigation
 
 <PageTitle>Home</PageTitle>
 
 <h1>WorkTracer 1.0</h1>
 
-<p>
-    Click on the calendar tab to log your work hours.
-    For information about your worked hours, overtime etc, go to the overview tab.
-</p>
+@if (authService.isLoggedIn)
+{
+    <div class="container-fluid">
+        <p>
+            Click on the calendar tab to log your work hours.
+            For information about your worked hours, overtime etc, go to the overview tab.
+        </p>
+    </div>
+}
+else
+{
+    <div class="container-fluid">
+        <p>
+            To access your tracker please log in.
+        </p>
+        <button type="button" class="btn btn-primary" @onclick="RedirectToLogin">Log in</button>
+    </div>
+}
+
+@code
+{
+    private void RedirectToLogin()
+    {
+        navigation.NavigateTo("/login");
+    }
+}
+
