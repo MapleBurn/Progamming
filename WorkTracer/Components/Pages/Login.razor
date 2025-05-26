@@ -1,29 +1,25 @@
 @page "/login"
+@rendermode InteractiveServer
+@using System.Net
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity
 @inject AuthService authService
 @inject NavigationManager navigation
 
 <PageTitle>Login</PageTitle>
 
-<EditForm Model="@credentials" OnValidSubmit=@HandleLogin FormName="loginForm">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
+<EditForm FormName="LoginDialog" Model=@Credentials OnValidSubmit="HandleLogin">
     <div class="mb-3">
-        <InputText @bind-Value="credentials.Username"  
-                   class="form-control"
-                   placeholder="Username" />
+        <InputText id="Username" @bind-Value=Credentials.Username class="form-control" placeholder="Username" />
     </div>
     <div class="mb-3">
-        <InputText @bind-Value="credentials.Password" 
-                   type="password"
-                   class="form-control"
-                   placeholder="Password" />
+        <InputText id="Password" @bind-Value=Credentials.Password type="password" class="form-control" placeholder="Password" />
     </div>
     <div class="mb-3">
-        <button type="submit" class="btn btn-primary">Login</button>
+        <input type="submit" class="btn btn-primary" value="Login" />
     </div>
+    
 </EditForm>
-
 @if (loginFailed)
 {
     <div class="alert alert-danger" role="alert">
@@ -32,15 +28,15 @@
 }
 
 @code {
-    private Credentials credentials = new Credentials();
+    Credentials Credentials = new Credentials();
     private bool loginFailed = false;
 
-    private void HandleLogin()
+    private async Task HandleLogin(EditContext obj)
     {
-        bool result = authService.Login(credentials.Username, credentials.Password);
+        bool result = authService.Login(Credentials.Username, Credentials.Password);
         if (result)
         {
-            navigation.NavigateTo("/");
+            navigation.NavigateTo("/", false);
         }
         else
         {
