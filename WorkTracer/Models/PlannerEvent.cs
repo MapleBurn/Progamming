@@ -1,9 +1,13 @@
+using System.Drawing;
 
 public class PlannerEvent
 {
     public string Id { get; set; }
     public string Name { get; set; }
-    public List<(int col, int hour)> Cells { get; set; } = new List<(int col, int hour)>();
     public string Text { get; set; }
-    public enum Type {Working, Break, Overtime, Absence} 
+    public int Day {get; set;}
+
+    public string Color { get; set; } = "#e1f5fe";
+    public TimeOnly  StartTime {get; set;}
+    public TimeOnly  EndTime {get; set;}
 }

@@ -42,13 +42,12 @@
                     
                     @foreach (var evt in GetEventsInColumn(currentCol))
                     {
-                        var columnCells = evt.Cells.Where(c => c.col == currentCol).ToList();
-                        @if (columnCells.Any())
+                        @if (evt.Day > 0)
                         {
-                            var minHour = columnCells.Min(c => c.hour);
-                            var maxHour = columnCells.Max(c => c.hour);
+                            double minHour = evt.StartTime.Hour + evt.StartTime.Minute/60d;
+                            double maxHour = evt.EndTime.Hour + evt.EndTime.Minute/60d;
                             <div class="event-block"
-                                 style="top: @((minHour) * 40)px; height: @((maxHour - minHour + 1) * 40)px"
+                                 style="top: @((minHour) * 40)px; height: @((int)((maxHour - minHour) * 40))px; background: @evt.Color"
                                  data-event-id="@evt.Id"
                                  @onclick:stopPropagation="true"
                                  @onclick="() => ShowEditModal(evt.Id)">
@@ -74,12 +73,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="CloseModal"></button>
             </div>
             <div class="modal-body">
-                <input type="text" id="editEventName" class="form-control mb-3" placeholder="Event name" @bind="EditEventName">
+                <div class="d-flex justify-content-between">
+                    <input type="text" id="editEventName" class="form-control mb-3" placeholder="Event name" @bind="EditEventName">
+                    <input type="color" id="colorSelector" @bind-value="SelectedColor" class="form-control form-control-color mb-3"/>
+                </div>
                 <InputTextArea id="EditEventText" class="form-control mb-3" placeholder="Text" @bind-Value="EditEventText" rows="6"/>
                 <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-danger" id="deleteEvent" @onclick="DeleteEvent">Delete</button>
-                    <button type="button" class="btn btn-primary" id="saveEvent" @onclick="SaveEvent">Save Changes</button>
+                    <input type="time" id="startTime" class="form-control mb-3" @bind="startTime"/>
+                    <input type="time" id="endTime" class="form-control mb-3" @bind="endTime"/>
                 </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-danger mb-3" id="deleteEvent" @onclick="DeleteEvent">Delete</button>
+                    <button type="button" class="btn btn-primary mb-3" id="saveEvent" @onclick="SaveEvent">Save Changes</button>
+                </div>
+                @if (AlertClass != "") {<div class="alert @AlertClass d-flex align-items-center justify-content-center"><p>@AlertText</p></div>}
             </div>
         </div>
     </div>
@@ -95,24 +102,52 @@
     private PlannerEvent currentEvent;
     private bool isSelecting;
     private int? startCol;
-    private int? startHour;
     private List<(int col, int hour)> currentSelection = new List<(int col, int hour)>();
     
     // Modal properties
     private string ModalDisplay = "none";
     private string ModalClass = "";
     private bool ShowBackdrop;
+    private string AlertClass ="";
+    private string AlertText;
     private string EditEventName { get; set; } = "";
     private string EditEventText { get; set; } = "";
+    private TimeOnly startTime;
+    private TimeOnly endTime;
+    private string SelectedColor { get; set; } = "#e1f5fe";
+
+    public static string GenerateSimpleColorWithFixedSL()
+    {
+        var random = new Random();
+        double hue = random.NextDouble() * 360;
+        double saturation = 0.94;
+        double lightness = 0.94;
+
+        double c = (1 - Math.Abs(2 * lightness - 1)) * saturation;
+        double x = c * (1 - Math.Abs((hue / 60) % 2 - 1));
+        double m = lightness - c / 2;
+
+        double r, g, b;
+        if (hue < 60) { r = c; g = x; b = 0; }
+        else if (hue < 120) { r = x; g = c; b = 0; }
+        else if (hue < 180) { r = 0; g = c; b = x; }
+        else if (hue < 240) { r = 0; g = x; b = c; }
+        else if (hue < 300) { r = x; g = 0; b = c; }
+        else { r = c; g = 0; b = x; }
+
+        int R = (int)((r + m) * 255);
+        int G = (int)((g + m) * 255);
+        int B = (int)((b + m) * 255);
+
+        return $"#{R:X2}{G:X2}{B:X2}";
+    }
 
     private void HandleMouseDown(int col, int hour)
     {
         if (col == 0) return;
-        //if (GetEventsInCell(col, hour).Any()) return;
-
         isSelecting = true;
         startCol = col;
-        startHour = hour;
+        startTime = new TimeOnly(hour, 0);
         currentSelection.Clear();
         currentSelection.Add((col, hour));
     }
@@ -121,7 +156,7 @@
     {
         if (!isSelecting || col == 0) return;
         
-        CalculateSelection(col, hour);
+        CalculateSelection(hour);
         StateHasChanged();
     }
 
@@ -134,29 +169,25 @@
         if (currentSelection.Count > 0)
         {
             if (currentSelection.Any(c => c.col == 0)) return;
-            CreateEvent("New Event");
+            CreateEvent("New Event", startCol ?? 0);
         }
         StateHasChanged();
     }
 
-    private void CalculateSelection(int endCol, int endHour)
+    private void CalculateSelection(int endHour)
     {
-        if (!startCol.HasValue || !startHour.HasValue) return;
+        if (!startCol.HasValue) return;
 
         currentSelection.Clear();
+        
+        int minHour = Math.Min(startTime.Hour, endHour);
+        int maxHour = Math.Max(startTime.Hour, endHour);
 
-        int minCol = Math.Min(startCol.Value, endCol);
-        int maxCol = Math.Max(startCol.Value, endCol);
-        int minHour = Math.Min(startHour.Value, endHour);
-        int maxHour = Math.Max(startHour.Value, endHour);
 
-        for (int col = minCol; col <= maxCol; col++)
-        {
             for (int hour = minHour; hour <= maxHour; hour++)
             {
-                currentSelection.Add((col, hour));
+                currentSelection.Add((startCol.Value, hour));
             }
-        }
     }
 
     private bool IsSelected(int col, int hour)
@@ -164,90 +195,50 @@
         return currentSelection.Any(c => c.col == col && c.hour == hour);
     }
 
-    private void CreateEvent(string name)
+    private void CreateEvent(string name, int day)
     {
-        var eventsToAdd = new List<PlannerEvent>();
-        var eventsToRemove = new List<string>();
-
-        // Process existing events for splitting
-        foreach (var existingEvent in events.Values.ToList())
+        TimeOnly start = new TimeOnly(currentSelection[0].hour, 0);
+        TimeOnly end = new TimeOnly(currentSelection.Last().hour, 59);
+        foreach (PlannerEvent existingEvent in GetEventsInColumn(day).OrderBy(e => e.StartTime))
         {
-            var overlap = existingEvent.Cells.Intersect(currentSelection).ToList();
-            if (overlap.Count == 0) continue;
-
-            var remainingCells = existingEvent.Cells.Except(currentSelection).ToList();
-            var columns = remainingCells.GroupBy(c => c.col);
-
-            foreach (var colGroup in columns)
+            if (start < existingEvent.EndTime && existingEvent.StartTime < end)
             {
-                var hours = colGroup.Select(c => c.hour)
-                                  .OrderBy(h => h)
-                                  .ToList();
+                TimeSpan beforeSpace = existingEvent.StartTime - start;
+                TimeSpan afterSpace = end - existingEvent.EndTime;
                 
-                var blocks = GroupIntoContiguousBlocks(hours);
-                
-                foreach (var block in blocks)
+                if (beforeSpace > afterSpace)
                 {
-                    eventsToAdd.Add(new PlannerEvent {
-                        Id = Guid.NewGuid().ToString(),
-                        Name = existingEvent.Name,
-                        Text = existingEvent.Text,
-                        Cells = block.Select(h => (colGroup.Key, h)).ToList()
-                    });
+                    end = existingEvent.StartTime.AddMinutes(-1); 
+                }
+                else
+                {
+                    start = existingEvent.EndTime.AddMinutes(1);
                 }
             }
-            
-            eventsToRemove.Add(existingEvent.Id);
         }
-
-        // Update event dictionary
-        foreach (var id in eventsToRemove) events.Remove(id);
-        foreach (var evt in eventsToAdd) events[evt.Id] = evt;
-
-        // Add new event
+        
+        if (end <= start)
+        {
+            currentSelection.Clear();
+            return;
+        }
         var newId = Guid.NewGuid().ToString();
         events[newId] = new PlannerEvent {
             Id = newId,
             Name = name,
-            Cells = currentSelection.ToList()
+            StartTime = start,
+            EndTime = end,
+            Day = day,
+            Color = GenerateSimpleColorWithFixedSL()
         };
         
         currentSelection.Clear();
     }
 
-    private List<List<int>> GroupIntoContiguousBlocks(List<int> hours)
-    {
-        if (!hours.Any()) return new List<List<int>>();
-        
-        var blocks = new List<List<int>>();
-        var currentBlock = new List<int> { hours[0] };
-
-        for (int i = 1; i < hours.Count; i++)
-        {
-            if (hours[i] == currentBlock.Last() + 1)
-                currentBlock.Add(hours[i]);
-            else
-            {
-                blocks.Add(currentBlock);
-                currentBlock = new List<int> { hours[i] };
-            }
-        }
-        blocks.Add(currentBlock);
-        
-        return blocks;
-    }
-
-    private List<PlannerEvent> GetEventsInCell(int col, int hour)
-    {
-        return events.Values
-            .Where(e => e.Cells.Any(c => c.col == col && c.hour == hour))
-            .ToList();
-    }
-
     private List<PlannerEvent> GetEventsInColumn(int column)
     {
         return events.Values
-            .Where(e => e.Cells.Any(c => c.col == column))
+            .Where(e => e.Day == column)
             .ToList();
     }
 
@@ -257,6 +248,9 @@
         {
             EditEventName = currentEvent.Name;
             EditEventText = currentEvent.Text ?? "";
+            startTime = currentEvent.StartTime;
+            endTime = currentEvent.EndTime;
+            SelectedColor = currentEvent.Color;
             ModalDisplay = "block";
             ModalClass = "show";
             ShowBackdrop = true;
@@ -268,6 +262,7 @@
         ModalDisplay = "none";
         ModalClass = "";
         ShowBackdrop = false;
+        AlertClass = "";
         currentEvent = null;
     }
 
@@ -275,10 +270,36 @@
     {
         if (currentEvent != null)
         {
+            AlertClass = "alert-success";
+            var otherEvents = GetEventsInColumn(currentEvent.Day)
+                .Where(e => e.Id != currentEvent.Id)
+                .ToList();
+
+            foreach (var ev in otherEvents)
+            {
+                if (startTime < ev.EndTime && ev.StartTime < endTime)
+                {
+                    AlertClass = "alert-danger";
+                    AlertText = "Event overlaps with another event :(";
+                    break;
+                }
+            }
+
+            if (startTime > endTime)
+            {
+                AlertClass = "alert-danger";
+                AlertText = "Event has invalid time range :I";
+            }
             currentEvent.Name = EditEventName;
             currentEvent.Text = EditEventText;
+            currentEvent.Color = SelectedColor;
+            if (AlertClass == "alert-success")
+            {
+                AlertText = "Event successfuly edited :)";
+                currentEvent.StartTime = startTime;
+                currentEvent.EndTime = endTime;
+            }
         }
-        CloseModal();
     }
 
     private void DeleteEvent()
