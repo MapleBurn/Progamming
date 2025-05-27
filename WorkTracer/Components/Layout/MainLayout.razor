@@ -11,7 +11,7 @@
         <div class="top-row px-4">
             <AuthorizeView>
                 <Authorized>
-                    <a href="" target="_blank">logged in as: @context.User.Identity?.Name</a>
+                    <p class="m-1">logged in as: @context.User.Identity?.Name</p>
                     <a href="/onlogout" class="btn btn-danger">Log out</a>
                 </Authorized>
                 <NotAuthorized>

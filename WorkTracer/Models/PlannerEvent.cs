@@ -13,5 +13,5 @@ public class PlannerEvent
     public TimeOnly  EndTime {get; set;}
     public EventWeek EventWeek { get; set; }
     public bool IsPaid { get; set; } = true;
-    private bool IsRepeating { get; set; } = false;
+    public bool IsRepeating { get; set; } = false;
 }
