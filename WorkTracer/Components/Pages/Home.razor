@@ -38,11 +38,15 @@
 }
 Events:
 <ul>
-        @foreach (var ev in events)
+    
+    @if (events != null)
+    {
+        foreach (var ev in events)
         {
             <li>@($"{ev.Day}: {ev.Name} ({ev.StartTime:hh\\:mm}–{ev.EndTime:hh\\:mm})")</li>
         }
-    </ul>
+    }
+</ul>
 <button class="btn btn-primary" @onclick="AddTestEvent">Add Test Event</button>
 @code
 {
