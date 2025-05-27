@@ -32,6 +32,10 @@
     </NotAuthorized>
 </AuthorizeView>
 
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
 Events:
 <ul>
         @foreach (var ev in events)
@@ -42,6 +46,7 @@ Events:
 <button class="btn btn-primary" @onclick="AddTestEvent">Add Test Event</button>
 @code
 {
+    private string errorMessage;
     private void RedirectToLogin()
     {
         navigation.NavigateTo("/login");
@@ -51,10 +56,17 @@ Events:
 
     protected override async Task OnInitializedAsync()
     {
-    // Read all events from the database
-        events = await Db.PlannerEvents
-            .OrderBy(e => e.Day)
-            .ToListAsync();
+        try
+        {
+            // Read all events from the database
+            events = await Db.PlannerEvents
+                .OrderBy(e => e.Day)
+                .ToListAsync();
+        }
+        catch (Exception e)
+        {
+            errorMessage = $"Error loading events: {e.Message}";
+        }
     }
 
     private async Task AddTestEvent()
