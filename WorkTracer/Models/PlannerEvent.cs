@@ -1,4 +1,5 @@
 using System.Drawing;
+using WorkTracer.Data; // or the namespace where EventWeek is defined
 
 public class PlannerEvent
 {
@@ -10,4 +11,7 @@ public class PlannerEvent
     public string Color { get; set; } = "#e1f5fe";
     public TimeOnly  StartTime {get; set;}
     public TimeOnly  EndTime {get; set;}
+    
+    // Navigation property for the related EventWeek
+    public EventWeek EventWeek { get; set; }
 }

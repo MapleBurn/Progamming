@@ -4,6 +4,11 @@
 @using Microsoft.AspNetCore.Components
 @inject NavigationManager navigation
 
+@using Microsoft.EntityFrameworkCore
+@using WorkTracer.Data
+@using System.Runtime.InteropServices.JavaScript
+@inject ApplicationDbContext Db
+
 <PageTitle>Home</PageTitle>
 
 <h1>WorkTracer 1.0</h1>
@@ -27,11 +32,66 @@
     </NotAuthorized>
 </AuthorizeView>
 
+Events:
+<ul>
+        @foreach (var ev in events)
+        {
+            <li>@($"{ev.Day}: {ev.Name} ({ev.StartTime:hh\\:mm}–{ev.EndTime:hh\\:mm})")</li>
+        }
+    </ul>
+<button class="btn btn-primary" @onclick="AddTestEvent">Add Test Event</button>
 @code
 {
     private void RedirectToLogin()
     {
         navigation.NavigateTo("/login");
+    }
+    
+    private List<PlannerEvent> events;
+
+    protected override async Task OnInitializedAsync()
+    {
+    // Read all events from the database
+        events = await Db.PlannerEvents
+            .OrderBy(e => e.Day)
+            .ToListAsync();
+    }
+
+    private async Task AddTestEvent()
+    {
+        // Ensure a week exists
+        var week = await Db.EventWeeks.FirstOrDefaultAsync();
+        if (week == null)
+        {
+            week = new EventWeek()
+            {
+                 StartDate = DateOnly.MinValue,
+                EndDate = DateOnly.MaxValue,
+                 PlannerEvents = new List<PlannerEvent>()
+            };
+
+            Db.EventWeeks.Add(week);
+        }
+
+        // Create and configure a new PlannerEvent
+        var newEvent = new PlannerEvent
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = "Demo",
+            Text = "Demo event",
+            Day = 3,
+            StartTime = new TimeOnly(10, 0),
+            EndTime = new TimeOnly(11, 0),
+            EventWeek = week
+        };
+
+        Db.PlannerEvents.Add(newEvent);
+        await Db.SaveChangesAsync();
+
+        // Refresh the list
+        events = await Db.PlannerEvents
+            .OrderBy(e => e.Day)
+            .ToListAsync();
     }
 }
 

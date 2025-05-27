@@ -1,8 +1,8 @@
 ﻿public class EventWeek
 {
-    private int Id {get; set;}
-    private int UserId {get; set;}
-    private DateOnly StartDate {get; set;}
-    private DateOnly EndDate {get; set;}
-    private List<PlannerEvent> PlannerEvents {get;set;}
+    public int Id {get; set;}
+    public int UserId {get; set;}
+    public DateOnly StartDate {get; set;}
+    public DateOnly EndDate {get; set;}
+    public List<PlannerEvent> PlannerEvents {get;set;}
 }

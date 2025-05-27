@@ -3,7 +3,8 @@ using WorkTracer.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using WorkTracer.Services;
-using Microsoft.AspNetCore.Components.Server;
+using Microsoft.EntityFrameworkCore;
+using WorkTracer.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,9 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<UserRecord>();
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite("Data Source=worktracer.db"));
 //builder.Services.AddScoped<AuthService>();
 //builder.Services.AddScoped<AuthenticationStateProvider, AuthState>();
 
