@@ -5,5 +5,4 @@
     public DateOnly StartDate {get; set;}
     public DateOnly EndDate {get; set;}
     public List<PlannerEvent> PlannerEvents {get;set;}
-    public List<int> ExludedRepeatingEvents {get;set;}
 }

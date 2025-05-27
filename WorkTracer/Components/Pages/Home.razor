@@ -82,7 +82,9 @@ Events:
             Day = 3,
             StartTime = new TimeOnly(10, 0),
             EndTime = new TimeOnly(11, 0),
-            EventWeek = week
+            EventWeek = week,
+            IsPaid = true,
+            IsRepeating = false
         };
 
         Db.PlannerEvents.Add(newEvent);
