@@ -6,14 +6,29 @@ public class UserRecord
 {
     public string Username {get; set;}
     public string Password {get; set;}
-    private readonly List<UserRecord> users;
-    
-    public UserRecord()
+    private static readonly List<UserRecord> users;
+
+    static UserRecord()
     {
+        var json = "{}";
         // adjust the path as needed
         var path = "../WorkTracer/wwwroot/resources/users.json";
-        var json = File.ReadAllText(path);
+        try
+        {
+            json = File.ReadAllText(path);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            using var sW = File.CreateText(path);
+            sW.WriteLine("{}");
+        }
+
         users = JsonSerializer.Deserialize<List<UserRecord>>(json) ?? new List<UserRecord>();
+    }
+
+    public UserRecord()
+    {
     }
 
     public Task<bool> ValidateCredentialsAsync(string userName, string password)

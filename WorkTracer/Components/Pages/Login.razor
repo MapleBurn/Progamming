@@ -1,29 +1,28 @@
 @page "/login"
 @rendermode InteractiveServer
-@using System.Net
-@using Microsoft.AspNetCore.Components.Forms
+
 @using Microsoft.AspNetCore.Identity
-@inject AuthService authService
+@using WorkTracer.Services
+@using Microsoft.AspNetCore.Http.Features
 @inject NavigationManager navigation
+@inject SignInManager<ApplicationUser> SignInManager
 
 <PageTitle>Login</PageTitle>
 
-<form FormName="LoginDialog" asp-controller="Auth" asp-action="Auth/CookieLogin" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<EditForm Model="@Credentials" OnValidSubmit="HandleLogin" FormName="LoginForm">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <InputText @bind-Value="Credentials.Username" class="form-control" placeholder="Username" />
+    </div>
+    <div class="mb-3">
+        <InputText @bind-Value="Credentials.Password" type="password" class="form-control" placeholder="Password" />
+    </div>
+    <div class="mb-3">
+        <input type="submit" class="btn btn-primary" value="Login" />
+    </div>
+</EditForm>
 
-    <div class="mb-3">
-        <input id="Username" asp-for="Username" class="form-control" placeholder="Enter your username"/>
-    </div>
-    <div class="mb-3">
-        <input id="Password" type="password" asp-for="Password" class="form-control" placeholder="Enter your password"/>
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <button type="submit" class="btn btn-primary" >Log in</button>
-    </div>
-</form>
-
-@if (true)
+@if (loginFailed)
 {
     <div class="alert alert-danger" role="alert">
         <p><strong>Error:</strong> incorrect username or password.</p>
@@ -31,5 +30,12 @@
 }
 
 @code {
-    
+    LoginModel Credentials = new LoginModel();
+    private bool loginFailed = false;
+
+    private async Task HandleLogin(EditContext obj)
+    {
+        var url = $"onlogin?username={Credentials.Username}&password={Credentials.Password}";
+        navigation.NavigateTo(url, forceLoad: true); // triggers full page post
+    }
 }

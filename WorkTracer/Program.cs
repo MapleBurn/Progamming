@@ -1,23 +1,42 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using WorkTracer.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
+using WorkTracer.Services;
+using Microsoft.AspNetCore.Components.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
-builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddSingleton<UserRecord>();
-
-// Add authentication options
-builder.Services.AddAuthentication("Auth")
-    .AddCookie("Auth", options =>
-    {            
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
-        options.SlidingExpiration = true;
-        options.LoginPath = "/login";
-    });
+// Add services to the container.
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = IdentityConstants.ApplicationScheme;
+        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+    })
+    .AddIdentityCookies();
+builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationCore();
+
+builder.Services.AddRazorPages();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<UserRecord>();
+//builder.Services.AddScoped<AuthService>();
+//builder.Services.AddScoped<AuthenticationStateProvider, AuthState>();
+
+builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false )
+    .AddUserStore<UserStore>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
 
 var app = builder.Build();
 
@@ -38,10 +57,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllerRoute("default", "{controller}/{action}");
-});
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+app.MapRazorPages(); // ✅ Needed to map .cshtml Razor Pages like OnLogin
 
 app.Run();

@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
-@inject AuthService authService
 @inject NavigationManager navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="page">
     <div class="sidebar">
@@ -9,15 +9,15 @@
 
     <main>
         <div class="top-row px-4">
-            @if (authService.isLoggedIn)
-            {
-                <a href="" target="_blank">logged in as: erororororororor</a>
-                <button class="btn btn-danger" action="Auth/CookieLogout">Log out</button>
-            }
-            else
-            {
-                <a href="login">log in</a>
-            }
+            <AuthorizeView>
+                <Authorized>
+                    <a href="" target="_blank">logged in as: @context.User.Identity?.Name</a>
+                    <button class="btn btn-danger" action="Auth/CookieLogout">Log out</button>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login">log in</a>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
 
         <article class="content px-4">
