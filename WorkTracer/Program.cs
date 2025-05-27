@@ -19,6 +19,13 @@ builder.Services.AddAuthentication(options =>
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
     .AddIdentityCookies();
+
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/login";
+});
+
 builder.Services.AddAuthorization();
 builder.Services.AddAuthorizationCore();
 
@@ -31,6 +38,7 @@ builder.Services.AddSingleton<UserRecord>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false )
+//    .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddUserStore<UserStore>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
