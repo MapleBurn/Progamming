@@ -1,4 +1,8 @@
 .idea/
 WorkTracer/bin
 WorkTracer/obj
+WorkTracer/worktracer.db
+WorkTracer/worktracer.db-shm
+WorkTracer/worktracer.db-wal
+WorkTracer.sln.DotSettings.user
 
