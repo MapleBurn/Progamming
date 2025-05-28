@@ -27,7 +27,6 @@ namespace WorkTracer.Data
             builder.Entity<PlannerEvent>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                // Configure TimeOnly and DateOnly conversions if needed for SQLite:
                 entity.HasOne<UserRecord>(e => e.Owner);
             });
             
