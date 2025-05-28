@@ -267,6 +267,7 @@
             StartTime = start,
             EndTime = end,
             Color = GenerateSimpleColorWithFixedSL(),
+            Text = "",
             Owner = GetUserData().Result
         };
         events.Add(eventToSave);
@@ -275,10 +276,10 @@
         currentSelection.Clear();
     }
 
-    private async Task SaveEventToDB(PlannerEvent eventToDb)
+    private void SaveEventToDB(PlannerEvent eventToDb)
     {
-        Db.PlannerEvents.Add(eventToDb);
-        await Db.SaveChangesAsync();
+        Db.PlannerEvents.Update(eventToDb);
+        Db.SaveChanges();
     }
 
     private List<PlannerEvent> GetEventsInColumn(int column)
@@ -290,7 +291,7 @@
 
     private void ShowEditModal(int eventId)
     {
-        currentEvent = events[eventId];
+        currentEvent = events[eventId-1];
         EditEventName = currentEvent.Name;
         EditEventText = currentEvent.Text ?? "";
         startTime = currentEvent.StartTime;
