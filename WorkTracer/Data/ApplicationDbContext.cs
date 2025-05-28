@@ -23,14 +23,14 @@ namespace WorkTracer.Data
                 entity.Property(e => e.Username).IsRequired();
                 entity.Property(e => e.Email).IsRequired();
                 entity.Property(e => e.Password).IsRequired();
-                entity.HasMany(e => e.EventWeeks);
+                entity.HasMany(e => e.EventWeeks).WithOne().HasForeignKey(e => e.UserId);
             });
             
             // Configure one-to-many relationship: EventWeek -> PlannerEvent
             builder.Entity<EventWeek>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasMany(e => e.PlannerEvents);
+                entity.HasMany(e => e.PlannerEvents).WithOne().HasForeignKey(e => e.EventWeekId);
             });
 
             builder.Entity<PlannerEvent>(entity =>

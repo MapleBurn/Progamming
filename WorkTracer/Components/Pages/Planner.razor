@@ -2,6 +2,9 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @inject NavigationManager navigation
+@using WorkTracer.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Db
 
 <div class="planner-container">
     <!-- Header Row -->
@@ -100,8 +103,10 @@
 }
 
 @code {
+    private List<EventWeek> weeks;
     private Dictionary<string, PlannerEvent> events = new Dictionary<string, PlannerEvent>();
     private PlannerEvent currentEvent;
+    private EventWeek currentEventWeek;
     private bool isSelecting;
     private int? startCol;
     private List<(int col, int hour)> currentSelection = new List<(int col, int hour)>();
@@ -117,6 +122,11 @@
     private TimeOnly startTime;
     private TimeOnly endTime;
     private string SelectedColor { get; set; } = "#e1f5fe";
+    
+    protected override void OnInitialized()
+    {
+        
+    }
 
     public static string GenerateSimpleColorWithFixedSL()
     {
@@ -311,5 +321,40 @@
             events.Remove(currentEvent.Id);
         }
         CloseModal();
+    }
+    
+    private async Task GetDataFromDB()
+    {
+        weeks = await Db.EventWeeks.OrderBy(e => e.StartDate).ToListAsync();
+        foreach (EventWeek week in weeks)
+        {
+            //week.PlannerEvents
+        }
+    }
+
+    private async Task SaveToDB()
+    {
+        List<PlannerEvent> eventsToDB;
+        foreach (PlannerEvent x in events.Values.ToList())
+        {
+            // what am i doing???
+        }
+        
+        
+        
+        
+        
+        var week = await Db.EventWeeks.FirstOrDefaultAsync();
+        if (week == null)
+        {
+            week = new EventWeek()
+            {
+                StartDate = DateOnly.MinValue,
+                EndDate = DateOnly.MaxValue,
+                PlannerEvents = new List<PlannerEvent>()
+            };
+
+            Db.EventWeeks.Add(week);
+        }
     }
 }
