@@ -5,11 +5,12 @@ namespace WorkTracer.Services;
 
 public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<ApplicationUser>
 {
-    // Example: store users in memory (for demonstration)
+    private ApplicationDbContext _dbContext;
     private readonly Dictionary<string, ApplicationUser> _users = new();
 
     public UserStore(ApplicationDbContext dbContext)
     {
+        _dbContext = dbContext;
         //var user = new ApplicationUser
         //{
             // Id = "1",
@@ -24,19 +25,49 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
 
         if (!dbContext.Users.Any())
         {
-                        
+            var defaultUser = new UserRecord()
+            {
+                Id = 1,
+                Username = "admin",
+                Password = new PasswordHasher<ApplicationUser>().HashPassword(null, "Password123"),
+                Email = "admin@admin.cz"
+            };
+
+            dbContext.Users.Add(defaultUser);
         }
     }
 
-    public Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
+    private UserRecord ToDbUser(ApplicationUser user)
     {
-        _users[user.Id] = user;
-        return Task.FromResult(IdentityResult.Success);
+        return new UserRecord()
+        {
+            Username = user.UserName,
+            Password = user.PasswordHash,
+            Email = user.Email
+        };
+    }
+
+    private ApplicationUser FromDbUser(UserRecord user)
+    {
+        return new ApplicationUser()
+        {
+            UserName = user.Username,
+            NormalizedUserName = user.Username.ToUpper(),
+            Email = user.Email,
+            NormalizedEmail = user.Email.ToUpper(),
+            PasswordHash = user.Password
+        };
+    }
+
+    public async Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        await _dbContext.Users.AddAsync(ToDbUser(user));
+        return IdentityResult.Success;
     }
 
     public Task<IdentityResult> DeleteAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
-        _users.Remove(user.Id);
+        _dbContext.Users.Remove(ToDbUser(user));
         return Task.FromResult(IdentityResult.Success);
     }
 
