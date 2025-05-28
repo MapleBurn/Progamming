@@ -43,7 +43,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false )
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+    {
+         options.SignIn.RequireConfirmedAccount = false;
+    })
 //    .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddUserStore<UserStore>()
     .AddSignInManager()

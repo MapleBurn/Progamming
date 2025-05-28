@@ -32,9 +32,6 @@ namespace WorkTracer.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("EventWeekId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<bool>("IsPaid")
                         .HasColumnType("INTEGER");
 
@@ -77,7 +74,8 @@ namespace WorkTracer.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
 
                     b.HasKey("Id");
 

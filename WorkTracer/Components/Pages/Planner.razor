@@ -6,6 +6,7 @@
 @using WorkTracer.Data
 @using Microsoft.EntityFrameworkCore
 @inject ApplicationDbContext Db
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="planner-container">
     <!-- Header Row -->
@@ -139,7 +140,8 @@
     
     private async Task GetDataFromDB()
     {
-        var DbEvents = await Db.PlannerEvents.OrderBy(e => e.StartTime).ToListAsync();
+        var userName = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User.Identity.Name;
+        var DbEvents = await Db.PlannerEvents.Where(w => w.Owner.Username == userName).OrderBy(e => e.StartTime).ToListAsync();
         foreach (PlannerEvent DbEvent in DbEvents)
         {
             events[DbEvent.Id] = DbEvent;
