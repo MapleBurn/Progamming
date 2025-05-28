@@ -4,6 +4,7 @@ using WorkTracer.Data; // or the namespace where EventWeek is defined
 public class PlannerEvent
 {
     public int Id { get; set; }
+    public int LocalId { get; set; }
     public string Name { get; set; }
     public string Text { get; set; }
     public string Color { get; set; } = "#e1f5fe";

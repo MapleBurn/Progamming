@@ -55,7 +55,7 @@
                                  style="top: @((int)(minHour * 40))px; height: @((int)((maxHour - minHour) * 40))px; background: @evt.Color"
                                  data-event-id="@evt.Id"
                                  @onclick:stopPropagation="true"
-                                 @onclick="() => ShowEditModal(evt.Id)">
+                                 @onclick="() => ShowEditModal(evt.LocalId)">
                                 <p1>@evt.Name</p1><br><br>
                                 <p1 style="overflow-wrap: break-word; word-break: break-all; white-space: pre-wrap;">
                                     @evt.Text
@@ -103,7 +103,8 @@
 }
 
 @code {
-    private List<PlannerEvent> events = new List<PlannerEvent>();
+    private List<PlannerEvent> events = new List<PlannerEvent>();   //all events from the database
+    private List<PlannerEvent> userEvents = new List<PlannerEvent>();   //events for the current user
     private PlannerEvent currentEvent;
     private EventWeek currentEventWeek;
     private bool isSelecting;
@@ -122,9 +123,10 @@
     private DateTime endTime;
     private string SelectedColor { get; set; } = "#e1f5fe";
     
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {   
-        GetDataFromDB();
+        await GetDataFromDB();
+        await GetUserDataFromDB();
         currentEventWeek = new EventWeek();
         currentEventWeek.StartDate = new DateOnly(GetWeekStart(DateTime.Now).Year, GetWeekStart(DateTime.Now).Month, GetWeekStart(DateTime.Now).Day);
         currentEventWeek.EndDate = currentEventWeek.StartDate.AddDays(6);
@@ -147,9 +149,16 @@
     
     private async Task GetDataFromDB()
     {
-        var userName = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User.Identity.Name;
-        var DbEvents = await Db.PlannerEvents.Where(w => w.Owner.Username == userName).OrderBy(e => e.StartTime).ToListAsync();
+        //var userName = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User.Identity.Name;
+        var DbEvents = await Db.PlannerEvents.OrderBy(e => e.Id).ToListAsync();
         events = DbEvents;
+    }
+    
+    private async Task GetUserDataFromDB()
+    {
+        var userName = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User.Identity.Name;
+        var DbEvents = await Db.PlannerEvents.Where(w => w.Owner.Username == userName).OrderBy(e => e.LocalId).ToListAsync();
+        userEvents = DbEvents;
     }
 
     public static string GenerateSimpleColorWithFixedSL()
@@ -237,7 +246,7 @@
         var n = currentEventWeek.StartDate.AddDays(day - 1);
         DateTime start = new DateTime(n.Year, n.Month, n.Day, currentSelection[0].hour, 0, 0);
         DateTime end = new DateTime(n.Year, n.Month, n.Day, currentSelection.Last().hour, 59, 0);
-        foreach (PlannerEvent existingEvent in GetEventsInColumn(day).OrderBy(e => e.StartTime))
+        foreach (PlannerEvent existingEvent in GetEventsInColumn(day).OrderBy(e => e.LocalId))
         {
             if (start < existingEvent.EndTime && existingEvent.StartTime < end)
             {
@@ -270,8 +279,13 @@
             Text = "",
             Owner = GetUserData().Result
         };
-        events.Add(eventToSave);
         SaveEventToDB(eventToSave);
+        events.Add(eventToSave);
+        for (int i = 0; i <= userEvents.Count; i++)
+        {
+            eventToSave.LocalId = i;
+        }
+        userEvents.Add(eventToSave);
         
         currentSelection.Clear();
     }
@@ -284,14 +298,14 @@
 
     private List<PlannerEvent> GetEventsInColumn(int column)
     {
-        return events
+        return userEvents
             .Where(e => ((int)e.StartTime.DayOfWeek + 6) % 7 + 1 == column)
             .ToList();
     }
 
-    private void ShowEditModal(int eventId)
+    private void ShowEditModal(int eventLocalId)
     {
-        currentEvent = events[eventId-1];
+        currentEvent = userEvents[eventLocalId];
         EditEventName = currentEvent.Name;
         EditEventText = currentEvent.Text ?? "";
         startTime = currentEvent.StartTime;
@@ -357,6 +371,13 @@
         if (currentEvent != null)
         {
             events.Remove(currentEvent);
+            userEvents.Remove(currentEvent);
+            for (int i = 0; i <= userEvents.Count; i++)
+            {
+                userEvents[i].LocalId = i;
+            }
+            Db.PlannerEvents.Remove(currentEvent);
+            Db.SaveChanges();
         }
         CloseModal();
     }
