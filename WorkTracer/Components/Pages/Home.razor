@@ -75,6 +75,7 @@ Events:
 
     private async Task AddTestEvent()
     {
+
         // Create and configure a new PlannerEvent
         var newEvent = new PlannerEvent
         {
@@ -82,10 +83,10 @@ Events:
             Name = "Demo",
             Text = "Demo event",
             Day = 3,
-            StartTime = DateTime.Now,
-            EndTime = DateTime.Now.AddHours(1),
+            StartTime = new DateTime(10, 0, 0),
+            EndTime = new DateTime(11, 0, 0),
             IsPaid = true,
-            IsRepeating = false
+            IsRepeating = false,
         };
 
         Db.PlannerEvents.Add(newEvent);

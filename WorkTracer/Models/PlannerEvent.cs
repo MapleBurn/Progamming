@@ -11,7 +11,6 @@ public class PlannerEvent
     public string Color { get; set; } = "#e1f5fe";
     public DateTime  StartTime {get; set;}
     public DateTime  EndTime {get; set;}
-    public int EventWeekId { get; set; }
     public bool IsPaid { get; set; } = true;
     public bool IsRepeating { get; set; } = false;
     

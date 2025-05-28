@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @inject NavigationManager navigation
+@using System.Runtime.InteropServices.JavaScript
 @using WorkTracer.Data
 @using Microsoft.EntityFrameworkCore
 @inject ApplicationDbContext Db
@@ -20,7 +21,6 @@
     </div>
     
     <!-- Grid cells -->
-    <!-- 
     <div class="row">
         @for (int col = 0; col <= 7; col++)
         {
@@ -54,7 +54,7 @@
                                  style="top: @((minHour) * 40)px; height: @((int)((maxHour - minHour) * 40))px; background: @evt.Color"
                                  data-event-id="@evt.Id"
                                  @onclick:stopPropagation="true"
-                                 @onclick="() => ShowEditModal(evt.Id)">
+                                 @onclick="() => ShowEditModal(evt.Id.ToString())">
                                 <p1>@evt.Name</p1><br><br>
                                 <p1 style="overflow-wrap: break-word; word-break: break-all; white-space: pre-wrap;">
                                     @evt.Text
@@ -66,11 +66,9 @@
             </div>
         }
     </div>
-     -->
 </div>
 
 <!-- Edit Event Modal -->
-<!--
 <div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -87,8 +85,6 @@
                 <div class="d-flex justify-content-between">
                     <input type="time" id="startTime" class="form-control mb-3" @bind="startTime"/>
                     <input type="time" id="endTime" class="form-control mb-3" @bind="endTime"/>
-                    <input type="checkbox" id="repeatingCheck" class="form-control mb-3 form-check-input"/>
-                    <label for="repeatingCheck">Repeat</label>
                 </div>
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-danger mb-3" id="deleteEvent" @onclick="DeleteEvent">Delete</button>
@@ -100,18 +96,15 @@
     </div>
 </div>
 
--->
-
 @if (ShowBackdrop)
 {
     <div class="modal-backdrop fade show"></div>
 }
 
 @code {
-    //private List<EventWeek> weeks;
     private Dictionary<string, PlannerEvent> events = new Dictionary<string, PlannerEvent>();
     private PlannerEvent currentEvent;
-   // private EventWeek currentEventWeek;
+    private EventWeek currentEventWeek;
     private bool isSelecting;
     private int? startCol;
     private List<(int col, int hour)> currentSelection = new List<(int col, int hour)>();
@@ -129,8 +122,37 @@
     private string SelectedColor { get; set; } = "#e1f5fe";
     
     protected override void OnInitialized()
+    {   
+        GetDataFromDB();
+        currentEventWeek = new EventWeek();
+        currentEventWeek.StartDate = new DateOnly(GetWeekStart(DateTime.Now).Year, GetWeekStart(DateTime.Now).Month, GetWeekStart(DateTime.Now).Day);
+        currentEventWeek.EndDate = currentEventWeek.StartDate.AddDays(6);
+
+    }
+    
+    public static DateTime GetWeekStart(DateTime date, DayOfWeek firstDayOfWeek = DayOfWeek.Monday)
     {
-        
+        int diff = (7 + (date.DayOfWeek - firstDayOfWeek)) % 7;
+        DateTime start = date.AddDays(-diff).Date;
+        return start;
+    }
+    
+    private async Task GetDataFromDB()
+    {
+        var DbEvents = await Db.PlannerEvents.OrderBy(e => e.StartTime).ToListAsync();
+        foreach (PlannerEvent DbEvent in DbEvents)
+        {
+            events[DbEvent.Id] = DbEvent;
+        }
+    }
+
+    private async Task SaveToDB()
+    {
+        foreach (PlannerEvent e in events.Values)
+        {
+            Db.PlannerEvents.Add(e);
+        }
+        await Db.SaveChangesAsync();
     }
 
     public static string GenerateSimpleColorWithFixedSL()
@@ -158,13 +180,14 @@
 
         return $"#{R:X2}{G:X2}{B:X2}";
     }
-/*
+
     private void HandleMouseDown(int col, int hour)
     {
         if (col == 0) return;
         isSelecting = true;
         startCol = col;
-        startTime = new TimeOnly(hour, 0);
+        var n = currentEventWeek.StartDate.AddDays(col - 1);
+        startTime = new DateTime(n.Year, n.Month, n.Day, hour, 0, 0);
         currentSelection.Clear();
         currentSelection.Add((col, hour));
     }
@@ -214,8 +237,9 @@
 
     private void CreateEvent(string name, int day)
     {
-        TimeOnly start = new TimeOnly(currentSelection[0].hour, 0);
-        TimeOnly end = new TimeOnly(currentSelection.Last().hour, 59);
+        var n = currentEventWeek.StartDate.AddDays(day - 1);
+        DateTime start = new DateTime(n.Year, n.Month, n.Day,currentSelection[0].hour, 0, 0);
+        DateTime end = new DateTime(n.Year, n.Month, n.Day,currentSelection.Last().hour, 59, 0);
         foreach (PlannerEvent existingEvent in GetEventsInColumn(day).OrderBy(e => e.StartTime))
         {
             if (start < existingEvent.EndTime && existingEvent.StartTime < end)
@@ -246,7 +270,7 @@
             StartTime = start,
             EndTime = end,
             Day = day,
-            Color = GenerateSimpleColorWithFixedSL()
+            Color = GenerateSimpleColorWithFixedSL(),
         };
         
         currentSelection.Clear();
@@ -323,44 +347,8 @@
     {
         if (currentEvent != null)
         {
-            events.Remove(currentEvent.Id);
+            events.Remove(currentEvent.Id.ToString());
         }
         CloseModal();
     }
-    
-    private async Task GetDataFromDB()
-    {
-        weeks = await Db.EventWeeks.OrderBy(e => e.StartDate).ToListAsync();
-        foreach (EventWeek week in weeks)
-        {
-            //week.PlannerEvents
-        }
-    }
-
-    private async Task SaveToDB()
-    {
-        List<PlannerEvent> eventsToDB;
-        foreach (PlannerEvent x in events.Values.ToList())
-        {
-            // what am i doing???
-        }
-        
-        
-        
-        
-        
-        var week = await Db.EventWeeks.FirstOrDefaultAsync();
-        if (week == null)
-        {
-            week = new EventWeek()
-            {
-                StartDate = DateOnly.MinValue,
-                EndDate = DateOnly.MaxValue,
-                PlannerEvents = new List<PlannerEvent>()
-            };
-
-            Db.EventWeeks.Add(week);
-        }
-    }
-    */
 }
