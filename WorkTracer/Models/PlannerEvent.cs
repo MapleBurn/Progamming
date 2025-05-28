@@ -6,13 +6,10 @@ public class PlannerEvent
     public string Id { get; set; }
     public string Name { get; set; }
     public string Text { get; set; }
-    public int Day {get; set;}
-
     public string Color { get; set; } = "#e1f5fe";
     public DateTime  StartTime {get; set;}
     public DateTime  EndTime {get; set;}
     public bool IsPaid { get; set; } = true;
-    public bool IsRepeating { get; set; } = false;
     
     public UserRecord Owner { get; set; }
 }

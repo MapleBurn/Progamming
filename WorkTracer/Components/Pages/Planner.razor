@@ -47,12 +47,12 @@
                     
                     @foreach (var evt in GetEventsInColumn(currentCol))
                     {
-                        @if (evt.Day > 0)
+                        @if (((int)evt.StartTime.DayOfWeek + 6) % 7 + 1 > 0)
                         {
                             double minHour = evt.StartTime.Hour + evt.StartTime.Minute/60d;
                             double maxHour = evt.EndTime.Hour + evt.EndTime.Minute/60d;
                             <div class="event-block"
-                                 style="top: @((minHour) * 40)px; height: @((int)((maxHour - minHour) * 40))px; background: @evt.Color"
+                                 style="top: @((int)(minHour * 40))px; height: @((int)((maxHour - minHour) * 40))px; background: @evt.Color"
                                  data-event-id="@evt.Id"
                                  @onclick:stopPropagation="true"
                                  @onclick="() => ShowEditModal(evt.Id.ToString())">
@@ -271,7 +271,6 @@
             Name = name,
             StartTime = start,
             EndTime = end,
-            Day = day,
             Color = GenerateSimpleColorWithFixedSL(),
         };
         
@@ -281,7 +280,7 @@
     private List<PlannerEvent> GetEventsInColumn(int column)
     {
         return events.Values
-            .Where(e => e.Day == column)
+            .Where(e => ((int)e.StartTime.DayOfWeek + 6) % 7 + 1 == column)
             .ToList();
     }
 
@@ -313,8 +312,11 @@
     {
         if (currentEvent != null)
         {
+            startTime = new DateTime(currentEvent.StartTime.Year, currentEvent.StartTime.Month, currentEvent.StartTime.Day, startTime.Hour, startTime.Minute, startTime.Second);
+            endTime = new DateTime(currentEvent.StartTime.Year, currentEvent.StartTime.Month, currentEvent.StartTime.Day, endTime.Hour, endTime.Minute, endTime.Second);
+            
             AlertClass = "alert-success";
-            var otherEvents = GetEventsInColumn(currentEvent.Day)
+            var otherEvents = GetEventsInColumn(((int)currentEvent.StartTime.DayOfWeek + 6) % 7 + 1)
                 .Where(e => e.Id != currentEvent.Id)
                 .ToList();
 
@@ -349,7 +351,7 @@
     {
         if (currentEvent != null)
         {
-            events.Remove(currentEvent.Id.ToString());
+            events.Remove(currentEvent.Id);
         }
         CloseModal();
     }

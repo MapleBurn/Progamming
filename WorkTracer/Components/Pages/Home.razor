@@ -43,7 +43,7 @@ Events:
     {
         foreach (var ev in events)
         {
-            <li>@($"{ev.Day}: {ev.Name} ({ev.StartTime:hh\\:mm}–{ev.EndTime:hh\\:mm})")</li>
+            <li>@($"{((int)ev.StartTime.DayOfWeek + 6) % 7 + 1}: {ev.Name} ({ev.StartTime:hh\\:mm}–{ev.EndTime:hh\\:mm})")</li>
         }
     }
 </ul>
@@ -64,7 +64,7 @@ Events:
         {
             // Read all events from the database
             events = await Db.PlannerEvents
-                .OrderBy(e => e.Day)
+                .OrderBy(e => ((int)e.StartTime.DayOfWeek + 6) % 7 + 1)
                 .ToListAsync();
         }
         catch (Exception e)
@@ -82,11 +82,9 @@ Events:
             Id = Guid.NewGuid().ToString(),
             Name = "Demo",
             Text = "Demo event",
-            Day = 3,
-            StartTime = new DateTime(10, 0, 0),
-            EndTime = new DateTime(11, 0, 0),
-            IsPaid = true,
-            IsRepeating = false,
+            StartTime = new DateTime(2025, 5, 29, 4, 20, 0),
+            EndTime = new DateTime(2025, 5, 29, 5, 30, 0),
+            IsPaid = true
         };
 
         Db.PlannerEvents.Add(newEvent);
@@ -94,7 +92,7 @@ Events:
 
         // Refresh the list
         events = await Db.PlannerEvents
-            .OrderBy(e => e.Day)
+            .OrderBy(e => ((int)e.StartTime.DayOfWeek + 6) % 7 + 1)
             .ToListAsync();
     }
 }
