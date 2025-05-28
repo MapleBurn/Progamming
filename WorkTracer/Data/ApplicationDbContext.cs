@@ -11,11 +11,21 @@ namespace WorkTracer.Data
 
         public DbSet<PlannerEvent> PlannerEvents { get; set; }
         public DbSet<EventWeek> EventWeeks { get; set; }
+        public DbSet<UserRecord> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<UserRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Username).IsRequired();
+                entity.Property(e => e.Email).IsRequired();
+                entity.Property(e => e.Password).IsRequired();
+                entity.HasMany(e => e.EventWeeks);
+            });
+            
             // Configure one-to-many relationship: EventWeek -> PlannerEvent
             builder.Entity<EventWeek>(entity =>
             {
@@ -37,6 +47,7 @@ namespace WorkTracer.Data
                           v => v.ToTimeSpan(),
                           v => TimeOnly.FromTimeSpan(v));
             });
+            
         }
     }
 }

@@ -13,9 +13,9 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
         {
             Id = "1",
             UserName = "aaa",
-            //NormalizedUserName = "AAA",
+            NormalizedUserName = "AAA",
             Email = "aaa@aaa.cz",
-            //NormalizedEmail = "AAA@AAA.CZ",
+            NormalizedEmail = "AAA@AAA.CZ",
             PasswordHash = new PasswordHasher<ApplicationUser>().HashPassword(null, "aaa")
         };
 
