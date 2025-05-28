@@ -9,17 +9,17 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
 
     public UserStore()
     {
-        var user = new ApplicationUser
-        {
-            Id = "1",
-            UserName = "aaa",
-            NormalizedUserName = "AAA",
-            Email = "aaa@aaa.cz",
-            NormalizedEmail = "AAA@AAA.CZ",
-            PasswordHash = new PasswordHasher<ApplicationUser>().HashPassword(null, "aaa")
-        };
+        //var user = new ApplicationUser
+        //{
+            // Id = "1",
+            // UserName = "aaa",
+            // NormalizedUserName = "AAA",
+            // Email = "aaa@aaa.cz",
+            // NormalizedEmail = "AAA@AAA.CZ",
+            // PasswordHash = new PasswordHasher<ApplicationUser>().HashPassword(null, "aaa")
+        //};
 
-        _users[user.Id] = user;
+        //_users[user.Id] = user;
         
     }
 
