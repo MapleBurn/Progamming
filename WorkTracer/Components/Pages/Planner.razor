@@ -55,7 +55,7 @@
                                  style="top: @((int)(minHour * 40))px; height: @((int)((maxHour - minHour) * 40))px; background: @evt.Color"
                                  data-event-id="@evt.Id"
                                  @onclick:stopPropagation="true"
-                                 @onclick="() => ShowEditModal(evt.Id.ToString())">
+                                 @onclick="() => ShowEditModal(evt.Id)">
                                 <p1>@evt.Name</p1><br><br>
                                 <p1 style="overflow-wrap: break-word; word-break: break-all; white-space: pre-wrap;">
                                     @evt.Text
@@ -103,7 +103,7 @@
 }
 
 @code {
-    private Dictionary<string, PlannerEvent> events = new Dictionary<string, PlannerEvent>();
+    private List<PlannerEvent> events = new List<PlannerEvent>();
     private PlannerEvent currentEvent;
     private EventWeek currentEventWeek;
     private bool isSelecting;
@@ -137,24 +137,19 @@
         DateTime start = date.AddDays(-diff).Date;
         return start;
     }
+
+    private async Task<UserRecord> GetUserData()
+    {
+        var username = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User.Identity.Name;
+        var UserData = await Db.Users.Where(w => w.Username == username).ToListAsync();
+        return UserData[0];
+    }
     
     private async Task GetDataFromDB()
     {
         var userName = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User.Identity.Name;
         var DbEvents = await Db.PlannerEvents.Where(w => w.Owner.Username == userName).OrderBy(e => e.StartTime).ToListAsync();
-        foreach (PlannerEvent DbEvent in DbEvents)
-        {
-            //events[DbEvent.Id] = DbEvent;
-        }
-    }
-
-    private async Task SaveToDB()
-    {
-        foreach (PlannerEvent e in events.Values)
-        {
-            Db.PlannerEvents.Add(e);
-        }
-        await Db.SaveChangesAsync();
+        events = DbEvents;
     }
 
     public static string GenerateSimpleColorWithFixedSL()
@@ -240,18 +235,18 @@
     private void CreateEvent(string name, int day)
     {
         var n = currentEventWeek.StartDate.AddDays(day - 1);
-        DateTime start = new DateTime(n.Year, n.Month, n.Day,currentSelection[0].hour, 0, 0);
-        DateTime end = new DateTime(n.Year, n.Month, n.Day,currentSelection.Last().hour, 59, 0);
+        DateTime start = new DateTime(n.Year, n.Month, n.Day, currentSelection[0].hour, 0, 0);
+        DateTime end = new DateTime(n.Year, n.Month, n.Day, currentSelection.Last().hour, 59, 0);
         foreach (PlannerEvent existingEvent in GetEventsInColumn(day).OrderBy(e => e.StartTime))
         {
             if (start < existingEvent.EndTime && existingEvent.StartTime < end)
             {
                 TimeSpan beforeSpace = existingEvent.StartTime - start;
                 TimeSpan afterSpace = end - existingEvent.EndTime;
-                
+
                 if (beforeSpace > afterSpace)
                 {
-                    end = existingEvent.StartTime.AddMinutes(-1); 
+                    end = existingEvent.StartTime.AddMinutes(-1);
                 }
                 else
                 {
@@ -259,44 +254,51 @@
                 }
             }
         }
-        
+
         if (end <= start)
         {
             currentSelection.Clear();
             return;
         }
-        var newId = Guid.NewGuid().ToString();
-        events[newId] = new PlannerEvent {
-            //Id = newId,
+
+        PlannerEvent eventToSave = new PlannerEvent
+        {
             Name = name,
             StartTime = start,
             EndTime = end,
             Color = GenerateSimpleColorWithFixedSL(),
+            Owner = GetUserData().Result
         };
+        events.Add(eventToSave);
+        SaveEventToDB(eventToSave);
         
         currentSelection.Clear();
     }
 
+    private async Task SaveEventToDB(PlannerEvent eventToDb)
+    {
+        Db.PlannerEvents.Add(eventToDb);
+        await Db.SaveChangesAsync();
+    }
+
     private List<PlannerEvent> GetEventsInColumn(int column)
     {
-        return events.Values
+        return events
             .Where(e => ((int)e.StartTime.DayOfWeek + 6) % 7 + 1 == column)
             .ToList();
     }
 
-    private void ShowEditModal(string eventId)
+    private void ShowEditModal(int eventId)
     {
-        if (events.TryGetValue(eventId, out currentEvent))
-        {
-            EditEventName = currentEvent.Name;
-            EditEventText = currentEvent.Text ?? "";
-            startTime = currentEvent.StartTime;
-            endTime = currentEvent.EndTime;
-            SelectedColor = currentEvent.Color;
-            ModalDisplay = "block";
-            ModalClass = "show";
-            ShowBackdrop = true;
-        }
+        currentEvent = events[eventId];
+        EditEventName = currentEvent.Name;
+        EditEventText = currentEvent.Text ?? "";
+        startTime = currentEvent.StartTime;
+        endTime = currentEvent.EndTime;
+        SelectedColor = currentEvent.Color;
+        ModalDisplay = "block";
+        ModalClass = "show";
+        ShowBackdrop = true;
     }
 
     private void CloseModal()
@@ -344,6 +346,8 @@
                 currentEvent.StartTime = startTime;
                 currentEvent.EndTime = endTime;
             }
+            
+            SaveEventToDB(currentEvent);
         }
     }
 
@@ -351,7 +355,7 @@
     {
         if (currentEvent != null)
         {
-            //events.Remove(currentEvent.Id);
+            events.Remove(currentEvent);
         }
         CloseModal();
     }
