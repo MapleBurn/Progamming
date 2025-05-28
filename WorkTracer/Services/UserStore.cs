@@ -28,12 +28,13 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
             var defaultUser = new UserRecord()
             {
                 Id = 1,
-                Username = "admin",
+                Username = "ADMIN",
                 Password = new PasswordHasher<ApplicationUser>().HashPassword(null, "Password123"),
-                Email = "admin@admin.cz"
+                Email = "ADMIN@ADMIN.CZ"
             };
 
             dbContext.Users.Add(defaultUser);
+            dbContext.SaveChanges();
         }
     }
 
@@ -41,20 +42,23 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
     {
         return new UserRecord()
         {
-            Username = user.UserName,
+            Username = user.NormalizedUserName,
             Password = user.PasswordHash,
-            Email = user.Email
+            Email = user.NormalizedEmail
         };
     }
 
-    private ApplicationUser FromDbUser(UserRecord user)
+    private ApplicationUser? FromDbUser(UserRecord? user)
     {
+        if (user == null)
+            return null;
+        
         return new ApplicationUser()
         {
             UserName = user.Username,
-            NormalizedUserName = user.Username.ToUpper(),
+            NormalizedUserName = user.Username,
             Email = user.Email,
-            NormalizedEmail = user.Email.ToUpper(),
+            NormalizedEmail = user.Email,
             PasswordHash = user.Password
         };
     }
@@ -62,6 +66,7 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
     public async Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
         await _dbContext.Users.AddAsync(ToDbUser(user));
+        await _dbContext.SaveChangesAsync();
         return IdentityResult.Success;
     }
 
@@ -79,8 +84,8 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
 
     public Task<ApplicationUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
     {
-        var user = _users.Values.FirstOrDefault(u => u.NormalizedUserName == normalizedUserName);
-        return Task.FromResult(user);
+        var dbUser = _dbContext.Users.FirstOrDefault(u => u.Username == normalizedUserName);
+        return Task.FromResult(FromDbUser(dbUser));
     }
 
     public Task<string?> GetNormalizedUserNameAsync(ApplicationUser user, CancellationToken cancellationToken)
