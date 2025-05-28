@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using WorkTracer.Data;
 
 namespace WorkTracer.Services;
@@ -27,7 +28,7 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
         {
             var defaultUser = new UserRecord()
             {
-                Id = 1,
+                //Id = 1,
                 Username = "Admin",
                 Password = new PasswordHasher<ApplicationUser>().HashPassword(null, "Password123"),
                 Email = "ADMIN@ADMIN.CZ"
@@ -48,7 +49,7 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
         };
     }
 
-    private ApplicationUser? FromDbUser(UserRecord? user)
+    public ApplicationUser? FromDbUser(UserRecord? user)
     {
         if (user == null)
             return null;
@@ -65,8 +66,12 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
 
     public async Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
+        if (await _dbContext.Users.AnyAsync(u => u.Username == user.NormalizedUserName, cancellationToken))
+            return IdentityResult.Failed(new IdentityError { Description = $"User {user.UserName} already exists." });
+        
         await _dbContext.Users.AddAsync(ToDbUser(user));
         await _dbContext.SaveChangesAsync();
+        
         return IdentityResult.Success;
     }
 
