@@ -27,8 +27,8 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
         {
             var defaultUser = new UserRecord()
             {
-                Id = "1",
-                Username = "admin",
+                Id = 1,
+                Username = "Admin",
                 Password = new PasswordHasher<ApplicationUser>().HashPassword(null, "Password123"),
                 Email = "ADMIN@ADMIN.CZ"
             };

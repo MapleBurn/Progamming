@@ -144,7 +144,7 @@
         var DbEvents = await Db.PlannerEvents.Where(w => w.Owner.Username == userName).OrderBy(e => e.StartTime).ToListAsync();
         foreach (PlannerEvent DbEvent in DbEvents)
         {
-            events[DbEvent.Id] = DbEvent;
+            //events[DbEvent.Id] = DbEvent;
         }
     }
 
@@ -267,7 +267,7 @@
         }
         var newId = Guid.NewGuid().ToString();
         events[newId] = new PlannerEvent {
-            Id = newId,
+            //Id = newId,
             Name = name,
             StartTime = start,
             EndTime = end,
@@ -351,7 +351,7 @@
     {
         if (currentEvent != null)
         {
-            events.Remove(currentEvent.Id);
+            //events.Remove(currentEvent.Id);
         }
         CloseModal();
     }

@@ -17,7 +17,7 @@ namespace WorkTracer.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Username = table.Column<string>(type: "TEXT", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", nullable: false, collation: "NOCASE"),
                     Email = table.Column<string>(type: "TEXT", nullable: false),
                     Password = table.Column<string>(type: "TEXT", nullable: false)
                 },
@@ -30,16 +30,14 @@ namespace WorkTracer.Migrations
                 name: "PlannerEvents",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Text = table.Column<string>(type: "TEXT", nullable: false),
-                    Day = table.Column<int>(type: "INTEGER", nullable: false),
                     Color = table.Column<string>(type: "TEXT", nullable: false),
                     StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     EndTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EventWeekId = table.Column<int>(type: "INTEGER", nullable: false),
                     IsPaid = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsRepeating = table.Column<bool>(type: "INTEGER", nullable: false),
                     OwnerId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>

@@ -19,15 +19,13 @@ namespace WorkTracer.Migrations
 
             modelBuilder.Entity("PlannerEvent", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Day")
-                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("TEXT");
@@ -35,15 +33,12 @@ namespace WorkTracer.Migrations
                     b.Property<bool>("IsPaid")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsRepeating")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("OwnerId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
@@ -52,7 +47,8 @@ namespace WorkTracer.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasAnnotation("Sqlite:Autoincrement", true);
 
                     b.HasIndex("OwnerId");
 
@@ -61,8 +57,9 @@ namespace WorkTracer.Migrations
 
             modelBuilder.Entity("UserRecord", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -77,7 +74,8 @@ namespace WorkTracer.Migrations
                         .HasColumnType("TEXT")
                         .UseCollation("NOCASE");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasAnnotation("Sqlite:Autoincrement", true);
 
                     b.ToTable("Users");
                 });
@@ -86,7 +84,9 @@ namespace WorkTracer.Migrations
                 {
                     b.HasOne("UserRecord", "Owner")
                         .WithMany()
-                        .HasForeignKey("OwnerId");
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Owner");
                 });

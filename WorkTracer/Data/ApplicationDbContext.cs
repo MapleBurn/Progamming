@@ -18,7 +18,7 @@ namespace WorkTracer.Data
 
             builder.Entity<UserRecord>(entity =>
             {
-                entity.HasKey(e => e.Id);
+                entity.HasKey(e => e.Id).HasAnnotation("Sqlite:Autoincrement", true);;
                 entity.Property(e => e.Username).IsRequired().UseCollation("NOCASE");
                 entity.Property(e => e.Email).IsRequired();
                 entity.Property(e => e.Password).IsRequired();
@@ -26,7 +26,7 @@ namespace WorkTracer.Data
             
             builder.Entity<PlannerEvent>(entity =>
             {
-                entity.HasKey(e => e.Id);
+                entity.HasKey(e => e.Id).HasAnnotation("Sqlite:Autoincrement", true);;
                 entity.HasOne<UserRecord>(e => e.Owner);
             });
             
