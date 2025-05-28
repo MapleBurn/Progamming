@@ -1,0 +1,61 @@
+@page "/register"
+
+@inject NavigationManager navigation
+
+<PageTitle>Register</PageTitle>
+
+<AuthorizeView>
+    <Authorized Context="user">
+        <div class="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+            <div class="card shadow p-4" style="width: 100%; max-width: 400px;">
+                <h3 class="text-center mb-4">Login</h3>
+
+                @if (error)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Error:</strong> Something went wrong.
+                    </div>
+                }
+
+                <EditForm Model="@userRecord" OnValidSubmit="HandleRegister" FormName="RegisterForm">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <InputText @bind-Value="userRecord.Username" class="form-control" placeholder="Username" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <InputText @bind-Value="userRecord.Email" class="form-control" placeholder="Email" />
+                    </div>
+
+                    <div class="mb-3">
+                        <InputText @bind-Value="userRecord.Password" type="password" class="form-control" placeholder="Password" />
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Register new user</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="container-fluid">
+            <p>Only the administrator can register new users. Log in to Create a new account.</p>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code
+{
+    private UserRecord userRecord = new();
+    private bool error = false;
+    
+    private async Task HandleRegister(EditContext obj)
+    {
+        //var url = $"onlogin?username={userRecord.Username}&password={userRecord.Password}";
+        //navigation.NavigateTo(url, forceLoad: true); // triggers full page post
+        
+        
+    }
+}
