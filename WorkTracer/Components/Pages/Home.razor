@@ -75,20 +75,6 @@ Events:
 
     private async Task AddTestEvent()
     {
-        // Ensure a week exists
-        var week = await Db.EventWeeks.FirstOrDefaultAsync();
-        if (week == null)
-        {
-            week = new EventWeek()
-            {
-                 StartDate = DateOnly.MinValue,
-                EndDate = DateOnly.MaxValue,
-                 PlannerEvents = new List<PlannerEvent>()
-            };
-
-            Db.EventWeeks.Add(week);
-        }
-
         // Create and configure a new PlannerEvent
         var newEvent = new PlannerEvent
         {
@@ -96,8 +82,8 @@ Events:
             Name = "Demo",
             Text = "Demo event",
             Day = 3,
-            StartTime = new TimeOnly(10, 0),
-            EndTime = new TimeOnly(11, 0),
+            StartTime = DateTime.Now,
+            EndTime = DateTime.Now.AddHours(1),
             IsPaid = true,
             IsRepeating = false
         };

@@ -20,6 +20,7 @@
     </div>
     
     <!-- Grid cells -->
+    <!-- 
     <div class="row">
         @for (int col = 0; col <= 7; col++)
         {
@@ -65,9 +66,11 @@
             </div>
         }
     </div>
+     -->
 </div>
 
 <!-- Edit Event Modal -->
+<!--
 <div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -97,6 +100,8 @@
     </div>
 </div>
 
+-->
+
 @if (ShowBackdrop)
 {
     <div class="modal-backdrop fade show"></div>
@@ -119,8 +124,8 @@
     private string AlertText;
     private string EditEventName { get; set; } = "";
     private string EditEventText { get; set; } = "";
-    private TimeOnly startTime;
-    private TimeOnly endTime;
+    private DateTime startTime;
+    private DateTime endTime;
     private string SelectedColor { get; set; } = "#e1f5fe";
     
     protected override void OnInitialized()
@@ -153,7 +158,7 @@
 
         return $"#{R:X2}{G:X2}{B:X2}";
     }
-
+/*
     private void HandleMouseDown(int col, int hour)
     {
         if (col == 0) return;
@@ -357,4 +362,5 @@
             Db.EventWeeks.Add(week);
         }
     }
+    */
 }

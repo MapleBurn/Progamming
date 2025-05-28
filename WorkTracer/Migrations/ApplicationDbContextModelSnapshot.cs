@@ -17,28 +17,6 @@ namespace WorkTracer.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.16");
 
-            modelBuilder.Entity("EventWeek", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateOnly>("EndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateOnly>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EventWeeks");
-                });
-
             modelBuilder.Entity("PlannerEvent", b =>
                 {
                     b.Property<string>("Id")
@@ -51,7 +29,7 @@ namespace WorkTracer.Migrations
                     b.Property<int>("Day")
                         .HasColumnType("INTEGER");
 
-                    b.Property<TimeSpan>("EndTime")
+                    b.Property<DateTime>("EndTime")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EventWeekId")
@@ -67,7 +45,10 @@ namespace WorkTracer.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<TimeSpan>("StartTime")
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Text")
@@ -76,7 +57,7 @@ namespace WorkTracer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventWeekId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("PlannerEvents");
                 });
@@ -104,32 +85,15 @@ namespace WorkTracer.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("EventWeek", b =>
-                {
-                    b.HasOne("UserRecord", null)
-                        .WithMany("EventWeeks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("PlannerEvent", b =>
                 {
-                    b.HasOne("EventWeek", null)
-                        .WithMany("PlannerEvents")
-                        .HasForeignKey("EventWeekId")
+                    b.HasOne("UserRecord", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
 
-            modelBuilder.Entity("EventWeek", b =>
-                {
-                    b.Navigation("PlannerEvents");
-                });
-
-            modelBuilder.Entity("UserRecord", b =>
-                {
-                    b.Navigation("EventWeeks");
+                    b.Navigation("Owner");
                 });
 #pragma warning restore 612, 618
         }

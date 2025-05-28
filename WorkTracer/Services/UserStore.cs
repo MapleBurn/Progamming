@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using WorkTracer.Data;
 
 namespace WorkTracer.Services;
 
@@ -7,7 +8,7 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
     // Example: store users in memory (for demonstration)
     private readonly Dictionary<string, ApplicationUser> _users = new();
 
-    public UserStore()
+    public UserStore(ApplicationDbContext dbContext)
     {
         //var user = new ApplicationUser
         //{
@@ -20,7 +21,11 @@ public class UserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Applica
         //};
 
         //_users[user.Id] = user;
-        
+
+        if (!dbContext.Users.Any())
+        {
+                        
+        }
     }
 
     public Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
