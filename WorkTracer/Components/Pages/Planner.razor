@@ -11,14 +11,17 @@
 <div class="planner-container">
     <!-- Header Row -->
     <div class="row planner-header">
-        <div class="col"></div>
-        <div class="col text-center">Monday</div>
-        <div class="col text-center">Tuesday</div>
-        <div class="col text-center">Wednesday</div>
-        <div class="col text-center">Thursday</div>
-        <div class="col text-center">Friday</div>
-        <div class="col text-center">Saturday</div>
-        <div class="col text-center">Sunday</div>
+        <div class="col"><div class="button-container">
+            <button type="button" class="btn btn-light"  @onclick="() => ChangeWeek(-7)">Prev.</button>
+            <button type="button" class="btn btn-light"  @onclick="() => ChangeWeek(7)">Next</button>
+            </div></div>
+        <div class="col text-center">Monday<br>@currentEventWeek.StartDate</div>
+        <div class="col text-center">Tuesday<br>@currentEventWeek.StartDate.AddDays(1)</div>
+        <div class="col text-center">Wednesday<br>@currentEventWeek.StartDate.AddDays(2)</div>
+        <div class="col text-center">Thursday<br>@currentEventWeek.StartDate.AddDays(3)</div>
+        <div class="col text-center">Friday<br>@currentEventWeek.StartDate.AddDays(4)</div>
+        <div class="col text-center">Saturday<br>@currentEventWeek.StartDate.AddDays(5)</div>
+        <div class="col text-center">Sunday<br>@currentEventWeek.StartDate.AddDays(6)</div>
     </div>
     
     <!-- Grid cells -->
@@ -45,7 +48,7 @@
                         </div>
                     }
                     
-                    @foreach (var evt in GetEventsInColumn(currentCol))
+                    @foreach (var evt in GetEventsInColumn(currentCol).Where(e => DateOnly.FromDateTime(e.StartTime) >= currentEventWeek.StartDate && DateOnly.FromDateTime(e.StartTime) <= currentEventWeek.EndDate))
                     {
                         @if (((int)evt.StartTime.DayOfWeek + 6) % 7 + 1 > 0)
                         {
@@ -131,6 +134,12 @@
         currentEventWeek.StartDate = new DateOnly(GetWeekStart(DateTime.Now).Year, GetWeekStart(DateTime.Now).Month, GetWeekStart(DateTime.Now).Day);
         currentEventWeek.EndDate = currentEventWeek.StartDate.AddDays(6);
 
+    }
+
+    public void ChangeWeek(int days)
+    {
+        currentEventWeek.StartDate = currentEventWeek.StartDate.AddDays(days);
+        currentEventWeek.EndDate = currentEventWeek.EndDate.AddDays(days);
     }
     
     public static DateTime GetWeekStart(DateTime date, DayOfWeek firstDayOfWeek = DayOfWeek.Monday)
@@ -269,24 +278,20 @@
             currentSelection.Clear();
             return;
         }
-
-        PlannerEvent eventToSave = new PlannerEvent
-        {
-            Name = name,
-            StartTime = start,
-            EndTime = end,
-            Color = GenerateSimpleColorWithFixedSL(),
-            Text = "",
-            Owner = GetUserData().Result
-        };
-        SaveEventToDB(eventToSave);
-        events.Add(eventToSave);
-        for (int i = 0; i <= userEvents.Count; i++)
-        {
-            eventToSave.LocalId = i;
-        }
-        userEvents.Add(eventToSave);
         
+            PlannerEvent eventToSave = new PlannerEvent
+            {
+                Name = name,
+                StartTime = start,
+                EndTime = end,
+                Color = GenerateSimpleColorWithFixedSL(),
+                Text = "",
+                Owner = GetUserData().Result
+            };
+            SaveEventAfterCreation(eventToSave);
+            ShowEditModal(eventToSave.LocalId);
+        
+
         currentSelection.Clear();
     }
 
@@ -296,16 +301,34 @@
         Db.SaveChanges();
     }
 
+    private void SaveEventAfterCreation(PlannerEvent createdEvent)
+    {
+        SaveEventToDB(createdEvent);
+        events.Add(createdEvent);
+        for (int i = 0; i < userEvents.Count; i++)
+        {
+            userEvents[i].LocalId = i;
+        }
+
+        for (int i = 0; i <= userEvents.Count; i++)
+        {
+            createdEvent.LocalId = i;
+        }
+
+        userEvents.Add(createdEvent);
+    }
+
     private List<PlannerEvent> GetEventsInColumn(int column)
     {
         return userEvents
             .Where(e => ((int)e.StartTime.DayOfWeek + 6) % 7 + 1 == column)
+            .OrderBy(e => e.LocalId)
             .ToList();
     }
 
     private void ShowEditModal(int eventLocalId)
     {
-        currentEvent = userEvents[eventLocalId];
+        currentEvent = userEvents.Find(e => e.LocalId == eventLocalId)!;
         EditEventName = currentEvent.Name;
         EditEventText = currentEvent.Text ?? "";
         startTime = currentEvent.StartTime;
@@ -322,6 +345,55 @@
         ModalClass = "";
         ShowBackdrop = false;
         AlertClass = "";
+        if ((currentEvent.EndTime - currentEvent.StartTime).Hours >= 6 && currentEvent.StartTime.TimeOfDay < new TimeSpan(12, 0, 0) && currentEvent.EndTime.TimeOfDay > new TimeSpan(12, 0, 0))
+        {
+            PlannerEvent saveEvent = new PlannerEvent();
+            saveEvent = currentEvent;
+            
+            events.Remove(currentEvent);
+            userEvents.Remove(currentEvent);
+            for (int i = 0; i < userEvents.Count; i++)
+            {
+                userEvents[i].LocalId = i;
+            }
+            Db.PlannerEvents.Remove(currentEvent);
+            Db.SaveChanges();
+            
+            PlannerEvent eventPartOne = new PlannerEvent
+            {
+                Name = saveEvent.Name,
+                StartTime = saveEvent.StartTime,
+                EndTime = new DateTime(saveEvent.StartTime.Year, saveEvent.StartTime.Month, saveEvent.StartTime.Day, 11, 59, 0),
+                Color = saveEvent.Color,
+                Text = "",
+                Owner = saveEvent.Owner
+            };
+            SaveEventAfterCreation(eventPartOne);
+            
+            PlannerEvent lunchEvent = new PlannerEvent
+            {
+                Name = "Lunch",
+                StartTime = new DateTime(saveEvent.StartTime.Year, saveEvent.StartTime.Month, saveEvent.StartTime.Day, 12, 0, 0),
+                EndTime = new DateTime(saveEvent.StartTime.Year, saveEvent.StartTime.Month, saveEvent.StartTime.Day, 12, 59, 0),
+                Color = "#C37C60",
+                Text = "",
+                IsPaid = false,
+                Owner = saveEvent.Owner
+            };
+            SaveEventAfterCreation(lunchEvent);
+            
+            PlannerEvent eventPartTwo = new PlannerEvent
+            {
+                Name = currentEvent.Name,
+                StartTime = new DateTime(saveEvent.StartTime.Year, saveEvent.StartTime.Month, saveEvent.StartTime.Day, 13, 0, 0),
+                EndTime = currentEvent.EndTime,
+                Color = eventPartOne.Color,
+                Text = "",
+                Owner = saveEvent.Owner
+            };
+            
+            SaveEventAfterCreation(eventPartTwo);
+        }
         currentEvent = null;
     }
 
