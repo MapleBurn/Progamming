@@ -83,7 +83,7 @@
   {
     var records = await Db.PlannerEvents
       .AsNoTracking()
-      .Where(e => e.IsPaid == true)
+      .Where(e => e.IsPaid == true).Where(e => e.Owner == currentUser)
       .ToListAsync();
 
     if (records == null || records.Count == 0)
@@ -103,7 +103,7 @@
   {
     var records = await Db.PlannerEvents
       .AsNoTracking()
-      .Where(e => e.IsPaid == false)
+      .Where(e => e.IsPaid == false).Where(e => e.Owner == currentUser)
       .ToListAsync();
 
     if (records == null || records.Count == 0)
@@ -123,7 +123,7 @@
   {
     var mostFrequent = await Db.PlannerEvents
       .AsNoTracking()
-      .Where(e => !string.IsNullOrEmpty(e.Name)) // Ignore null/empty names
+      .Where(e => !string.IsNullOrEmpty(e.Name)).Where(e => e.Owner == currentUser) // Ignore null/empty names
       .GroupBy(e => e.Name)
       .OrderByDescending(g => g.Count())
       .Select(g => g.Key)
