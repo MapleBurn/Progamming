@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">WorkTracer</a>
     </div>
@@ -25,11 +27,18 @@
                 <span class="bi bi-view-list" aria-hidden="true"></span> Work overview
             </NavLink>
         </div>
-        
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="register">
-                <span class="bi bi-person-add" aria-hidden="true"></span> Register users
-            </NavLink>
-        </div>
+
+
+        @{
+            var userIdentity = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User.Identity;
+        }
+        @if (userIdentity != null && userIdentity.Name == "Admin")
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="register">
+                    <span class="bi bi-person-add" aria-hidden="true"></span> Register users
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>

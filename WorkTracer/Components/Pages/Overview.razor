@@ -14,51 +14,34 @@
 <div class="container my-4">
   <h2 class="mb-4 text-primary">Work Overview</h2>
 
-  <div class="row gy-4">f
-    <div class="col-12 col-lg-5">
-      <div class="card shadow-sm h-100">
-        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-          <button class="btn btn-sm btn-light text-primary" @onclick="PrevWeek">
-            <i class="bi bi-chevron-left"></i>
-          </button>
-          <strong>@CurrentWeekLabel</strong>
-          <button class="btn btn-sm btn-light text-primary" @onclick="NextWeek">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-        </div>
-        <div class="card-body">
-          <h5 class="card-title mb-3">@currentUser.Username</h5>
-          <dl class="row">
-            <dt class="col-6">Worked Hours</dt>
-            <dd class="col-6">@workedHours</dd>
-
-            <dt class="col-6">Lunch Time</dt>
-            <dd class="col-6">@LunchTime</dd>
-
-            <dt class="col-12 mt-3">Top Project</dt>
-            <dd class="col-12 fw-semibold">@TopProjectName</dd>
-          </dl>
-        </div>
+<div class="row gy-4">
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+        <button class="btn btn-sm btn-light text-primary" @onclick="PrevWeek">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <strong>@CurrentWeekLabel</strong>
+        <button class="btn btn-sm btn-light text-primary" @onclick="NextWeek">
+          <i class="bi bi-chevron-right"></i>
+        </button>
       </div>
-    </div>
+      <div class="card-body">
+        <h5 class="card-title mb-3">@currentUser.Username</h5>
+        <dl class="row">
+          <dt class="col-6">Worked Hours</dt>
+          <dd class="col-6">@workedHours</dd>
 
-    <!-- 2️⃣ Yearly Weeks Graph Container -->
-    <div class="col-12 col-lg-7">
-      <div class="card shadow-sm h-100">
-        <div class="card-header bg-primary text-white">
-          <strong>Yearly Week Summary</strong>
-        </div>
-        <div class="card-body d-flex flex-column">
-          <!-- Placeholder for your chart component -->
-          <div class="flex-grow-1">
-            @* e.g. <LineChart Data="@YearlyWeekData" /> *@
-            <canvas id="weeksChart" width="400" height="200"></canvas>
-          </div>
-          <small class="text-muted mt-2">Total weeks worked per month across the year</small>
-        </div>
+          <dt class="col-6">Lunch Time</dt>
+          <dd class="col-6">@LunchTime</dd>
+
+          <dt class="col-12 mt-3">Top Project</dt>
+          <dd class="col-12 fw-semibold">@TopProjectName</dd>
+        </dl>
       </div>
     </div>
   </div>
+</div>
 </div>
 
 @code {
@@ -68,7 +51,7 @@
   int workedHours;
   int LunchTime;
   //TimeSpan Overtime = TimeSpan.FromHours(8);
-  string TopProjectName = "Project Phoenix";
+  string TopProjectName;
 
   DateTime CurrentWeekStart = DateTime.Today;
   string CurrentWeekLabel => $"{CurrentWeekStart:MMM d} – {CurrentWeekStart.AddDays(6):MMM d}";
@@ -93,6 +76,7 @@
     // load events
     workedHours = await GetTotalHoursAsync();
     LunchTime = await GetTotalLunchAsync();
+    TopProjectName = await GetMostFrequentEventAsync();
   }
   
   public async Task<int> GetTotalHoursAsync()
@@ -133,6 +117,19 @@
 
     // Return total hours rounded to the nearest whole number
     return (int)Math.Round(totalDuration.TotalHours);
+  }
+  
+  public async Task<string> GetMostFrequentEventAsync()
+  {
+    var mostFrequent = await Db.PlannerEvents
+      .AsNoTracking()
+      .Where(e => !string.IsNullOrEmpty(e.Name)) // Ignore null/empty names
+      .GroupBy(e => e.Name)
+      .OrderByDescending(g => g.Count())
+      .Select(g => g.Key)
+      .FirstOrDefaultAsync();
+
+    return mostFrequent ?? "No records";
   }
 
 }
