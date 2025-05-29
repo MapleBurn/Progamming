@@ -1,27 +1,138 @@
 ﻿@page "/overview"
+@using Microsoft.EntityFrameworkCore
+@using WorkTracer.Data
 @attribute [Authorize]
 
 @rendermode InteractiveServer
 
 @inject NavigationManager navigation
+@inject ApplicationDbContext Db
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>overview</PageTitle>
 
-<h1>Work overview</h1>
+<div class="container my-4">
+  <h2 class="mb-4 text-primary">Work Overview</h2>
 
-<p>
-    here will be two graphs, one for the info about worked hours in the chosen month,
-     and the other one for the whole year.
-</p>
+  <div class="row gy-4">f
+    <div class="col-12 col-lg-5">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+          <button class="btn btn-sm btn-light text-primary" @onclick="PrevWeek">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <strong>@CurrentWeekLabel</strong>
+          <button class="btn btn-sm btn-light text-primary" @onclick="NextWeek">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title mb-3">@currentUser.Username</h5>
+          <dl class="row">
+            <dt class="col-6">Worked Hours</dt>
+            <dd class="col-6">@workedHours</dd>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Grill a random person alive</button>
+            <dt class="col-6">Lunch Time</dt>
+            <dd class="col-6">@LunchTime</dd>
+
+            <dt class="col-12 mt-3">Top Project</dt>
+            <dd class="col-12 fw-semibold">@TopProjectName</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2️⃣ Yearly Weeks Graph Container -->
+    <div class="col-12 col-lg-7">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-primary text-white">
+          <strong>Yearly Week Summary</strong>
+        </div>
+        <div class="card-body d-flex flex-column">
+          <!-- Placeholder for your chart component -->
+          <div class="flex-grow-1">
+            @* e.g. <LineChart Data="@YearlyWeekData" /> *@
+            <canvas id="weeksChart" width="400" height="200"></canvas>
+          </div>
+          <small class="text-muted mt-2">Total weeks worked per month across the year</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 @code {
-    private int currentCount = 0;
 
-    private void IncrementCount()
+  // --- Example backing properties (replace with your real data sources) ---
+  private UserRecord currentUser;
+  int workedHours;
+  int LunchTime;
+  //TimeSpan Overtime = TimeSpan.FromHours(8);
+  string TopProjectName = "Project Phoenix";
+
+  DateTime CurrentWeekStart = DateTime.Today;
+  string CurrentWeekLabel => $"{CurrentWeekStart:MMM d} – {CurrentWeekStart.AddDays(6):MMM d}";
+
+  void PrevWeek()
+  {
+    CurrentWeekStart = CurrentWeekStart.AddDays(-7);
+  }
+
+  void NextWeek()
+  {
+    CurrentWeekStart = CurrentWeekStart.AddDays(7);
+  }
+
+  protected override async Task OnInitializedAsync()
+  {
+    //get the user
+    var username = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User.Identity.Name;
+    var current = await Db.Users.Where(u => u.Username == username).ToListAsync();
+    currentUser = current[0];
+    
+    // load events
+    workedHours = await GetTotalHoursAsync();
+    LunchTime = await GetTotalLunchAsync();
+  }
+  
+  public async Task<int> GetTotalHoursAsync()
+  {
+    var records = await Db.PlannerEvents
+      .AsNoTracking()
+      .Where(e => e.IsPaid == true)
+      .ToListAsync();
+
+    if (records == null || records.Count == 0)
     {
-        currentCount++;
+      return 0;
     }
+
+    var totalDuration = records
+      .Select(r => r.EndTime - r.StartTime)
+      .Aggregate(TimeSpan.Zero, (sum, span) => sum + span);
+
+    // Return total hours rounded to the nearest whole number
+    return (int)Math.Round(totalDuration.TotalHours);
+  }
+  
+  public async Task<int> GetTotalLunchAsync()
+  {
+    var records = await Db.PlannerEvents
+      .AsNoTracking()
+      .Where(e => e.IsPaid == false)
+      .ToListAsync();
+
+    if (records == null || records.Count == 0)
+    {
+      return 0;
+    }
+
+    var totalDuration = records
+      .Select(r => r.EndTime - r.StartTime)
+      .Aggregate(TimeSpan.Zero, (sum, span) => sum + span);
+
+    // Return total hours rounded to the nearest whole number
+    return (int)Math.Round(totalDuration.TotalHours);
+  }
 
 }

@@ -1,99 +1,42 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 
-@using Microsoft.AspNetCore.Components
 @inject NavigationManager navigation
-
-@using Microsoft.EntityFrameworkCore
-@using WorkTracer.Data
-@using System.Runtime.InteropServices.JavaScript
-@inject ApplicationDbContext Db
 
 <PageTitle>Home</PageTitle>
 
-<h1>WorkTracer 1.0</h1>
+<h1 class="display-4 text-primary fw-bold mb-4">WorkTracer 1.0</h1>
 
 <AuthorizeView>
     <Authorized>
-        <div class="container-fluid">
-            <p>
-                Click on the calendar tab to log your work hours.
-                For information about your worked hours, overtime etc, go to the overview tab.
+        <div class="container py-4 bg-light rounded shadow-sm">
+            <h5 class="mb-3 text-secondary">Welcome back!</h5>
+            <p class="lead">
+                Use the <strong>Planner</strong> tab to log your work hours daily.
+                Review your <strong>work summary</strong>, including overtime, lunch, and categorized activities, in the <strong>Overview</strong> tab.
             </p>
+            <hr />
+            <p class="text-muted small">Need help? Contact your administrator for assistance or help with roles.</p>
         </div>
     </Authorized>
     <NotAuthorized>
-        <div class="container-fluid">
-            <p>
-                To access your tracker please log in.
+        <div class="container py-4 bg-white rounded shadow-sm border border-2">
+            <h5 class="text-danger mb-3">Access Restricted</h5>
+            <p class="lead">
+                To access your work tracker, please log in to your company account.
             </p>
-            <button type="button" class="btn btn-primary" @onclick="RedirectToLogin">Log in</button>
+            <button class="btn btn-primary btn-lg mt-3" @onclick="RedirectToLogin">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Log in
+            </button>
         </div>
     </NotAuthorized>
 </AuthorizeView>
 
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-Events:
-<ul>
-    
-    @if (events != null)
-    {
-        foreach (var ev in events)
-        {
-            <li>@($"{((int)ev.StartTime.DayOfWeek + 6) % 7 + 1}: {ev.Name} ({ev.StartTime:hh\\:mm}–{ev.EndTime:hh\\:mm})")</li>
-        }
-    }
-</ul>
-<button class="btn btn-primary" @onclick="AddTestEvent">Add Test Event</button>
 @code
 {
-    private string errorMessage;
     private void RedirectToLogin()
     {
         navigation.NavigateTo("/login");
-    }
-    
-    private List<PlannerEvent> events;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            // Read all events from the database
-            events = await Db.PlannerEvents
-                .OrderBy(e => ((int)e.StartTime.DayOfWeek + 6) % 7 + 1)
-                .ToListAsync();
-        }
-        catch (Exception e)
-        {
-            errorMessage = $"Error loading events: {e.Message}";
-        }
-    }
-
-    private async Task AddTestEvent()
-    {
-
-        // Create and configure a new PlannerEvent
-        var newEvent = new PlannerEvent
-        {
-            //Id = Guid.NewGuid().ToString(),
-            Name = "Demo",
-            Text = "Demo event",
-            StartTime = new DateTime(2025, 5, 29, 4, 20, 0),
-            EndTime = new DateTime(2025, 5, 29, 5, 30, 0),
-            IsPaid = true
-        };
-
-        Db.PlannerEvents.Add(newEvent);
-        await Db.SaveChangesAsync();
-
-        // Refresh the list
-        events = await Db.PlannerEvents
-            .OrderBy(e => ((int)e.StartTime.DayOfWeek + 6) % 7 + 1)
-            .ToListAsync();
     }
 }
 
