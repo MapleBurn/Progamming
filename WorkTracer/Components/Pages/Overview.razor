@@ -53,9 +53,16 @@
   //TimeSpan Overtime = TimeSpan.FromHours(8);
   string TopProjectName;
 
-  DateTime CurrentWeekStart = DateTime.Today;
+  DateTime CurrentWeekStart = GetWeekStart(DateTime.Today);
   string CurrentWeekLabel => $"{CurrentWeekStart:MMM d} – {CurrentWeekStart.AddDays(6):MMM d}";
 
+  public static DateTime GetWeekStart(DateTime date, DayOfWeek firstDayOfWeek = DayOfWeek.Monday)
+  {
+    int diff = (7 + (date.DayOfWeek - firstDayOfWeek)) % 7;
+    DateTime start = date.AddDays(-diff).Date;
+    return start;
+  }
+  
   void PrevWeek()
   {
     CurrentWeekStart = CurrentWeekStart.AddDays(-7);
